@@ -15,6 +15,7 @@ return [
     
     // Global Page Lang
     'welcome'=> 'Selamat Datang',
+    'welcome2'=> 'Selamat Datang2',
     'active' => 'Aktif',
     'inactive' => 'Inactive',
     'reached' => 'Reached',
