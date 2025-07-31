@@ -7,7 +7,7 @@
 
    /* Global Vars */
    const xenditPG = ['ovo', 'dana', 'linkaja', 'sampoernava'];
-   const midtransPG = ['gopay', 'shopeepay', 'qris'];
+   const midtransPG = ['gopay', 'shopeepay', 'qris', 'ovo', 'dana', 'linkaja', 'credit_card', 'bank_transfer'];
    const maxSupport = 10000000;
    const itemPrice = $('.card-items').data('price');
 
@@ -122,7 +122,7 @@
    const withMidtrans = (type) => {
       $.ajax({
          type: 'POST',
-         url: `${vars.apiURL}/support/snaptoken`,
+         url: `${vars.apiURL}/product/paymentcharge`, // Ganti ke endpoint produk
          data: getJsonparam(),
          dataType: 'json',
          headers: headers,
@@ -191,7 +191,33 @@
             Toast.fire({ icon: 'error', title: message, html: handleAjaxError(errors)});
          },
          success: function(data) {
+            // Check if response is from Midtrans (has token property)
+            if (data.token) {
+               // This is Midtrans response
+               snap.pay(data.token, {
+                  selectedPaymentType: pgType,
+                  onSuccess: function(result) {
+                     let param = margeCharge(data.param, result);
+                     snapcharge(param);
+                     $('#formsupport')[0].reset();
+                  },
+                  onPending: function(result) {
+                     let param = margeCharge(data.param, result);
+                     snapcharge(param);
+                     $('#formsupport')[0].reset();
+                  },
+                  onError: function(result) {
+                     Toast.fire({ icon: 'error', title: 'An error occured!', text: 'Something went wrong, please refresh this page or try again later.'});
+                     return false;
+                  },
+                  onClose: function() {
+                     console.log('Customer closed the popup without finishing the payment', 'onClose');
+                  }
+               });
+               return;
+            }
 
+            // Original Xendit logic
             if(Object.keys(data.data).length === 0){
                Toast.fire({ icon: 'error', title: 'Something went wrong!'});
                return;
@@ -330,111 +356,13 @@
    }
 
    /* Submit forms */ 
-   $("#formsupport").on('submit', function(event) {
-      event.preventDefault();
-
-      // const isValid = document.querySelector('#formsupport').reportValidity();
-      // if (!isValid) return;
-      
-      const pgid = $('input[name="payment_method_id"]:checked').val();
-      const pgdata = getDataAtribute('#pg-list-', pgid);
-      const from = $('#fromuser').val();
-      const email = $('#useremail').val();
-      const selectorPayment = $('.payment-list');
-      const validatorPayment = $('#validator-payment');
-      const validatorPayment2 = $('#validator-payment2');
-      var mailformat = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,9})+$/;
-
-      if(from === ''){
-         $('#feedback-from').addClass('d-block');
-
-         return false;
-      }
-
-      if (!email.match(mailformat || email === '')) {
-         $('#feedback-email').addClass('d-block');
-         return false;
-      }
-   
-      if(pgid === '' || pgid === undefined ){
-         validatorPayment.addClass('d-block');
-         validatorPayment2.addClass('d-block');
-         selectorPayment.addClass('pay-invalid');
-         return false;
-      }
-
-      if (!checkTotal()) {
-         Swal.fire({
-            icon: 'warning',
-            title: 'Oops...',
-            text: 'Maximun total support only: Rp.10.000.000'
-         });
-
-         return false;
-      }
-      
-      const { type: pgType, name: pgName } = pgdata; 
-
-      if (midtransPG.includes(pgType)) {
-         Swal.fire({
-            title: `Konfirmasi`,
-            html: `Lanjutkan pembayaran dengan: <b>${pgType.toUpperCase()}</b>`,
-            icon: 'info',
-            showCancelButton: true,
-            customClass: {
-               confirmButton: 'btn btn-primary me-3',
-               cancelButton: 'btn btn-secondary'
-            },
-            buttonsStyling: false,
-            confirmButtonText: lang.payment.btn.confrim.continue
-         }).then((result) => {
-            if (result.isConfirmed) {
-               withMidtrans(pgType);
-            }
-         });
-      } else if(xenditPG.includes(pgType)) {
-         Swal.fire({
-            title: `Konfirmasi`,
-            html: `Lanjutkan pembayaran dengan: <b>${pgName.toUpperCase()}</b>`,
-            icon: 'info',
-            input: 'text',
-            inputLabel: `Masukan nomor ponsel, awali dengan: 62xxx`,
-            inputPlaceholder: 'Contoh: 628123456789',
-            showCancelButton : true,
-            customClass: {
-               confirmButton: 'btn btn-primary me-3',
-               cancelButton: 'btn btn-secondary'
-            },
-            buttonsStyling: false,
-            inputValidator : (value) => {
-               if (!value) {
-                  return lang.payment.phone_number;
-               } else {
-                  if(!/^[0-9]+$/.test(value)){
-                     return "Please enter numeric only (Allowed input: 0-9)";
-                  }
-                  
-                  if(value.length < 10 || value.length > 13){
-                     return 'Invalid phone number';
-                  }
-
-                  let Nummber = value.toString();
-                  if (Nummber.substring(0, 2) != '62') {
-                     /* Add prefix 62xxxxxx', if prefix not exist from input value */
-                     let value = `62${Nummber.substring(2)}`;
-
-                     $('#tmp').html(`<input type="hidden" name="phone_number" value="${value}">`);
-                  } else {
-                     $('#tmp').html(`<input type="hidden" name="phone_number" value="${value}">`);
-                  };
-
-                  withXenditEwallet();
-               }
-            }
-         });
-      } else {
-         console.log('Undefined payment gateway!');
-      }
+   $(document).ready(function() {
+      // Handler submit form produk
+      // HAPUS: Handler AJAX untuk #formsupport agar submit normal
+      // $("#formsupport").on('submit', function(event) {
+      //     event.preventDefault();
+      //     ... seluruh isi lama ...
+      // });
    });
 
    /* Midtrans Json Params */

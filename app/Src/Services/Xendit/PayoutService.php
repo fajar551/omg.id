@@ -185,7 +185,7 @@ class PayoutService extends Xendits
         return $model;
     }
 
-    public function history(int $user_id)
+    public function history(int $user_id, array $params = [])
     {
         $model = $this->model->where(array('user_id' => $user_id))->orderBy('created_at', "desc");
         if (isset($params['from_date']) && isset($params['to_date'])) {

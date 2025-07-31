@@ -87,6 +87,25 @@
                padding: 0 10px !important;
          }
       }
+      
+      /* Global protection for all product images */
+      img[src*="storage/products"], 
+      img[src*="assets/img/image.png"],
+      .card-header-bg,
+      .product-image,
+      .product-purchase-image,
+      .product-payment-image {
+         -webkit-user-select: none !important;
+         -moz-user-select: none !important;
+         -ms-user-select: none !important;
+         user-select: none !important;
+         -webkit-user-drag: none !important;
+         -khtml-user-drag: none !important;
+         -moz-user-drag: none !important;
+         -o-user-drag: none !important;
+         user-drag: none !important;
+         pointer-events: none !important;
+      }
    </style>
 </head>
 
@@ -124,6 +143,9 @@
    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
    <script src="https://cdn.jsdelivr.net/npm/shepherd.js@8.3.1/dist/js/shepherd.min.js"></script>
    
+   <!-- Midtrans Snap.js Script -->
+   <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-yXcEzjhVAqWaf3qm"></script>
+   
    <!-- App Scripts -->
    <script type="text/javascript" src="{{ asset('assets/js/scroll.js') }}"></script>
    <script type="text/javascript" src="{{ asset('assets/js/search-explore.js') }}"></script>
@@ -151,6 +173,31 @@
    <script type="text/javascript">
       const api_url = '{!! url('api') !!}/';
       const app_url = '{!! url('') !!}/';
+
+      /**
+       * Prevent right-click on product images
+       */
+      document.addEventListener('DOMContentLoaded', function() {
+         // Global protection for all product images
+         const allProductImages = document.querySelectorAll('img[src*="storage/products"], img[src*="assets/img/image.png"], .card-header-bg, .product-image, .product-purchase-image, .product-payment-image');
+         
+         allProductImages.forEach(function(img) {
+            img.addEventListener('contextmenu', function(e) {
+               e.preventDefault();
+               return false;
+            });
+            
+            img.addEventListener('dragstart', function(e) {
+               e.preventDefault();
+               return false;
+            });
+            
+            img.addEventListener('selectstart', function(e) {
+               e.preventDefault();
+               return false;
+            });
+         });
+      });
 
       /**
        * Aos animation
@@ -219,7 +266,7 @@
 
    <!-- Page Scripts -->
    @yield('scripts')
-   
+   @stack('scripts')
 </body>
 
 </html>

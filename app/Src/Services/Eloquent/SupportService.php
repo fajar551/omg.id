@@ -154,7 +154,7 @@ class SupportService implements IBaseService{
                 "per_page" => $supportsQ->perPage(),
                 "total_page" => $supportsQ->total(),
                 "next_page_url" => $supportsQ->nextPageUrl(),
-                "links" => (string) $supportsQ->links(),
+                "links" => $supportsQ->render(),
             ];
 
         if ($supportsQ) {

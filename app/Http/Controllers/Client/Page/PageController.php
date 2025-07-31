@@ -12,15 +12,17 @@ use Illuminate\Http\Request;
 use App\Src\Services\Upload\UploadService;
 use App\Src\Services\Eloquent\ContentService;
 
-class PageController extends Controller {
+class PageController extends Controller
+{
 
-    protected $uploadService; 
+    protected $uploadService;
     public function __construct(UploadService $uploadService)
     {
         $this->uploadService = $uploadService;
     }
 
-    public function index(Request $request) {
+    public function index(Request $request)
+    {
         try {
             $creatorGoal = GoalService::getInstance()->getActiveGoals($request->user()->id);
             if ($creatorGoal) {
@@ -40,6 +42,8 @@ class PageController extends Controller {
                 'category' => PageCategoryService::getInstance()->getAll()
             ];
             $data['content'] = ContentService::getInstance()->getPublished($request->user()->id, null, 2, null);
+            // Tambahkan pengambilan produk
+            $data['products'] = \App\Models\Product::where('user_id', $request->user()->id)->get();
             $a = PageService::getInstance()->getDetail($request->user()->page->id);
             // dd($data);
             return view('client.page.index', $data);
@@ -91,4 +95,11 @@ class PageController extends Controller {
         }
     }
 
+    public function products()
+    {
+        $products = [
+            'data' => \App\Models\Product::where('user_id', auth()->id())->get()->toArray()
+        ];
+        return view('client.page.products', compact('products'));
+    }
 }

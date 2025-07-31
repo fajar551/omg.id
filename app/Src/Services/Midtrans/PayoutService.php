@@ -5,6 +5,7 @@ namespace App\Src\Services\Midtrans;
 use App\Models\Payout;
 use App\Models\PayoutAccount;
 use App\Models\UserBalance;
+use App\Src\Exceptions\ValidatorException;
 use App\Src\Helpers\Utils;
 use App\Src\Jobs\SendEmailPayoutJob;
 use App\Src\Services\Eloquent\NotificationService;
@@ -19,6 +20,7 @@ class PayoutService extends Midtrans {
     protected $userbalance;
     protected $model;
     protected $validator;
+    protected $approveKey;
 
     public function __construct(PayoutAccount $PAmodel, Payout $model, UserBalance $userbalance, PayoutValidator $validator)
     {
@@ -42,21 +44,25 @@ class PayoutService extends Midtrans {
             $fee = SettingService::getInstance()->get('payout_fee') + (SettingService::getInstance()->get('payout_fee')*(SettingService::getInstance()->get('ppn')/100));
             $total_payout = $amount + $fee;
             // dd($fee);
-            $PAmodel = $this->PAmodel->where(array("is_primary" => 1, "status" => 1, "user_id" => $user_id))->first();
+            $PAmodel = $this->PAmodel->where([
+                "is_primary" => 1,
+                "status" => 1,
+                "user_id" => $user_id
+            ])->first();
             // return $PAmodel;
             if ($PAmodel == null) {
-                throw new ValidatorException(__("message.setup_payout_account"), ["amount"=>[__("message.setup_payout_account")]]);
+                throw new ValidatorException(__("message.setup_payout_account"), null);
             }
 
             $userbalance = $this->userbalance->where(array('user_id' => $user_id))->first();
             if ($userbalance == null) {
-                throw new ValidatorException(__("message.setup_user_balance"), ["amount"=>[__("message.setup_user_balance")]]);
+                throw new ValidatorException(__("message.setup_user_balance"), null);
             }
             if ($amount < 50000) {
-                throw new ValidatorException(__("message.minimum_payout"), ["amount"=>[__("message.minimum_payout")]]);
+                throw new ValidatorException(__("message.minimum_payout"), null);
             }
             if ($userbalance->active < $total_payout) {
-                throw new ValidatorException(__("message.amount_active_not_enough"), ["amount"=>[__("message.amount_active_not_enough")]]);
+                throw new ValidatorException(__("message.amount_active_not_enough"), null);
             }
 
             $payload = [

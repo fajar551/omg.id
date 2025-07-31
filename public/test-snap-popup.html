@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Snap Popup</title>
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-yXcEzjhVAqWaf3qm"></script>
+</head>
+<body>
+    <h1>Test Snap Popup</h1>
+    <button onclick="testSnapPopup()">Test Snap Popup</button>
+    
+    <script>
+        function testSnapPopup() {
+            console.log('Testing Snap popup...');
+            console.log('Snap available:', typeof snap !== 'undefined');
+            
+            if (typeof snap !== 'undefined' && snap.pay) {
+                console.log('Snap.pay is available, testing with dummy token...');
+                
+                // Test with a dummy token (this will show error but popup should appear)
+                snap.pay('dummy-token', {
+                    onSuccess: function(result) {
+                        console.log('Success:', result);
+                        alert('Payment Success!');
+                    },
+                    onPending: function(result) {
+                        console.log('Pending:', result);
+                        alert('Payment Pending!');
+                    },
+                    onError: function(result) {
+                        console.log('Error:', result);
+                        alert('Payment Error (expected with dummy token)!');
+                    },
+                    onClose: function() {
+                        console.log('Closed');
+                        alert('Payment Popup Closed!');
+                    }
+                });
+            } else {
+                alert('Snap is NOT available! Check console for details.');
+            }
+        }
+        
+        // Check on page load
+        window.onload = function() {
+            console.log('Page loaded');
+            console.log('Snap available:', typeof snap !== 'undefined');
+            if (typeof snap !== 'undefined') {
+                console.log('Snap object:', snap);
+                console.log('Snap.pay function:', typeof snap.pay);
+            }
+        };
+    </script>
+</body>
+</html> 

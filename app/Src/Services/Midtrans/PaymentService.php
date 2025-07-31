@@ -135,6 +135,16 @@ class PaymentService extends Midtrans
         return $result;
     }
 
+    /**
+     * Get Snap Token untuk Product Payment
+     */
+    public function getSnapTokenForProduct(array $paymentData)
+    {
+        // Fungsi request token ke midtrans
+        $snapToken = Snap::getSnapToken($paymentData);
+        return $snapToken;
+    }
+
     // function untuk insert data ke db
     public function snapcharge(array $data)
     {

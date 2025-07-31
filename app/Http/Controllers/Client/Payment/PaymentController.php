@@ -7,11 +7,13 @@ use App\Src\Exceptions\NotFoundException;
 use App\Src\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use App\Src\Services\Eloquent\SupportService;
+use App\Src\Services\Midtrans\PaymentService;
 
 /*
     @Deprecated - use App\Http\Controllers\Client\Support\SupportController
 */
 class PaymentController extends Controller {
+    protected $supportservice;
     
     public function __construct(SupportService $supportservice) {
         $this->supportservice = $supportservice;

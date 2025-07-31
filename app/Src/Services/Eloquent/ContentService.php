@@ -185,7 +185,7 @@ class ContentService implements IBaseService {
             $model->save();
         }
 
-        return $model;
+        return $this->getReturnedValue($model);
     }
 
     /**
@@ -279,7 +279,7 @@ class ContentService implements IBaseService {
             $model->save();
         }
 
-        return $model;
+        return $this->getReturnedValue($model);
     }
 
     /**
@@ -332,7 +332,7 @@ class ContentService implements IBaseService {
      * Download the file attachment.
      *
      * @param array $data 
-     * @return \Illuminate\Support\Facades\Storage
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
     public function download(array $data)
     {
@@ -374,7 +374,7 @@ class ContentService implements IBaseService {
      * Get detail of contents.
      *
      * @param array $data
-     * @return void
+     * @return array
      */
     public function detail(array $data)
     {
@@ -458,7 +458,7 @@ class ContentService implements IBaseService {
      * Get random or related of contents.
      *
      * @param array $data
-     * @return void
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public function relatedContent(array $data)
     {
@@ -524,7 +524,7 @@ class ContentService implements IBaseService {
             "per_page" => $content->perPage(),
             "total_page" => $content->total(),
             "next_page_url" => $content->nextPageUrl(),
-            "links" => (string) $content->links(),
+            "links" => $content->render(),
         ];
 
         if (isset($supporter_id)) {
@@ -544,9 +544,10 @@ class ContentService implements IBaseService {
                 $no++;
             }
         } else {
-            $query = $content->map(function ($model) {
-                return $this->getReturnedValue($model);
-            });
+            $query = [];
+            foreach ($content as $model) {
+                $query[] = $this->getReturnedValue($model);
+            }
         }
 
         return ['data' => $query, "pagging" => $meta_data];
@@ -583,7 +584,7 @@ class ContentService implements IBaseService {
                         "per_page" => $content->perPage(),
                         "total_page" => $content->total(),
                         "next_page_url" => $content->nextPageUrl(),
-                        "links" => (string) $content->links(),
+                        "links" => $content->render(),
                     ];
 
 
@@ -669,7 +670,10 @@ class ContentService implements IBaseService {
                     // });
                     
         if ($akses == null && $query->qty != 0) {
-            return "You have no access to this content";
+            return [
+                'error' => true,
+                'message' => "You have no access to this content"
+            ];
         }
         
         return array_merge($data, $this->getReturnedValue($query) );
@@ -740,7 +744,7 @@ class ContentService implements IBaseService {
     {
         $this->validator->validateUpdate($data);
 
-        $model = $this->findById($id);
+        $model = $this->show($id);
         $model->title = ucwords($data["title"]);
         $model->content = $data["content"];
         $model->category_id= $data["category_id"];
@@ -805,7 +809,7 @@ class ContentService implements IBaseService {
      */
     public function deleteById(int $id, UploadService $uploadService)
     {
-        $model = $this->findById($id);
+        $model = $this->show($id);
 
         // Delete post file
         $oldFile = Constant::CONTENT_THUMBNAIL_PATH ."/{$model->thumbnail}";
@@ -820,7 +824,7 @@ class ContentService implements IBaseService {
 
     public function setCategory(int $id, int $category_id)
     {
-        $model = $this->findById($id);
+        $model = $this->show($id);
         $model->category_id = $category_id;
         $model->save();
 
@@ -860,7 +864,7 @@ class ContentService implements IBaseService {
 
     public function getprice(int $id)
     {
-        $model = $this->findById($id);
+        $model = $this->show($id);
         $item_price = ItemService::getInstance()->getprice($model->item_id);
         $price = $item_price*$model->qty;
         return $price;
@@ -868,7 +872,7 @@ class ContentService implements IBaseService {
 
     public function block(int $id)
     {
-        $model = $this->findById($id);
+        $model = $this->show($id);
         $model->status = 2;
         $model->save();
         return __("message.content_block");
@@ -876,7 +880,7 @@ class ContentService implements IBaseService {
 
     public function unblock(int $id)
     {
-        $model = $this->findById($id);
+        $model = $this->show($id);
         $model->status = 1;
         $model->save();
         return __("message.content_unblock");

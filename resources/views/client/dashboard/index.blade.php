@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="{{ asset('template/css/jquery.fontselect.min.css') }}">
 
     <style>
-        div#summary, div#totalsupporter {
+        div#summary,
+        div#totalsupporter {
             position: relative;
             padding: 30px 0;
         }
@@ -37,19 +38,18 @@
         }
 
         /* .highcharts-axis-title {
-                    color : black !important;
-                    fill : none !important;
-                } */
+                        color : black !important;
+                        fill : none !important;
+                    } */
 
         /* .shepherd-arrow:before {
-            background-color : #6103D0 !important;
-        } */
+                background-color : #6103D0 !important;
+            } */
 
-        
+
         /* .shepherd-cancel-icon {
-            color : white !important;
-        } */
-        
+                color : white !important;
+            } */
     </style>
 @endsection
 
@@ -58,10 +58,10 @@
         <div class="row">
             <div class="col-12">
                 @include('components.breadcrumb', [
-                    'title' => __('page.menu_dashboard'), 
+                    'title' => __('page.menu_dashboard'),
                     'pages' => [
                         '#' => __('page.menu_dashboard'),
-                    ]
+                    ],
                 ])
             </div>
 
@@ -89,7 +89,8 @@
                                 </div>
                             </div>
                             <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mt-3 py-0 bg-transparent step12">
-                                <div class="card img-dashboard shadow bg-transparent bg-1 rounded-lg border-0 p-0 position-relative">
+                                <div
+                                    class="card img-dashboard shadow bg-transparent bg-1 rounded-lg border-0 p-0 position-relative">
                                     <img src="{{ asset('template/images/dashboard-green.png') }}" alt=""
                                         class="img-fluid img-dashboard" />
                                     <div class="card-body  bg-transparent  position-absolute">
@@ -127,6 +128,30 @@
                                 </div>
 
                             </div>
+                            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mt-3 py-0 bg-transparent step15">
+                                <div class="card img-dashboard rounded-lg bg-4 shadow border-0 p-0 position-relative">
+                                    <img src="{{ asset('template/images/dashboard-purple.png') }}" alt=""
+                                        class="img-fluid img-dashboard" />
+                                    <div class="card-body bg-transparent position-absolute">
+                                        <h6>@lang('page.total_products_sold')</h6>
+                                        <div class="mt-5">
+                                            <h3>{{ $total_sold_products }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mt-3 py-0 bg-transparent step16">
+                                <div class="card img-dashboard rounded-lg bg-5 shadow border-0 p-0 position-relative">
+                                    <img src="{{ asset('template/images/dashboard-green.png') }}" alt=""
+                                        class="img-fluid img-dashboard" />
+                                    <div class="card-body bg-transparent position-absolute">
+                                        <h6>@lang('page.products_sold_today')</h6>
+                                        <div class="mt-5">
+                                            <h3>{{ $total_sold_products_today }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                     </div>
@@ -145,7 +170,7 @@
 
         <div class="col-12">
             <div class="card border-0 bg-white rounded-small shadow mb-5">
-                <div class="card-body p-0 mb-3 step15">
+                <div class="card-body p-0 mb-3 step17">
                     {{-- <div class="supporter"><div class="d-flex flex-row"><div></div><p>Supporter</p></div></div> --}}
                     <figure class="highcharts-figure">
                         <div id="summary"></div>
@@ -153,9 +178,16 @@
                 </div>
             </div>
             <div class="card border-0 bg-white rounded-small shadow mb-5">
-                <div class="card-body p-0 mb-3 step16">
+                <div class="card-body p-0 mb-3 step18">
                     <figure class="highcharts-figure">
                         <div id="totalsupporter"></div>
+                    </figure>
+                </div>
+            </div>
+            <div class="card border-0 bg-white rounded-small shadow mb-5">
+                <div class="card-body p-0 mb-3 step19">
+                    <figure class="highcharts-figure">
+                        <div id="totalproductsold"></div>
                     </figure>
                 </div>
             </div>
@@ -247,7 +279,7 @@
                                 currency: 'IDR',
                                 style: 'currency',
                                 minimumFractionDigits: 0
-                                });
+                            });
 
                             var s = '<b>' + this.x + '</b><br>';
                             s += `@lang('page.transaction_support_total'): <b>` + rupiah + '</b><br/>';
@@ -341,10 +373,85 @@
                     }
 
                 });
-
-
             }
 
+            const totalproductsold = (categori, serie, filter) => {
+                let judul = '@lang('page.graffic_products_sold')';
+                Highcharts.chart('totalproductsold', {
+                    title: {
+                        text: `<span class="fw-semibold graphic-title my-2 mb-4">${judul.replace(':filter', filter)}</span>`,
+                        style: {
+                            color: isdark == 'dark' ? '#ffffff' : '#000',
+                        }
+                    },
+                    subtitle: {
+                        text: ''
+                    },
+                    chart: {
+                        type: 'spline',
+                        backgroundColor: "rgba(0,0,0,0)"
+                        //color: "#fff"
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'Jumlah Produk',
+                            style: {
+                                color: '#141414',
+                            }
+                        }
+                    },
+                    xAxis: {
+                        accessibility: {
+                            rangeDescription: 'Bulan',
+                            style: {
+                                color: '#fff',
+                            }
+                        },
+                        categories: categori,
+                    },
+
+                    legend: {
+                        layout: 'vertical',
+                        align: 'right',
+                        verticalAlign: 'middle'
+                    },
+                    plotOptions: {
+                        series: {
+                            color: '#FF6B35'
+                        }
+                    },
+                    series: [{
+                        showInLegend: false,
+                        name: '',
+                        data: serie,
+                        lineWidth: 5,
+                        //color : '#333'
+                    }],
+                    tooltip: {
+                        shared: false,
+                        formatter: function() {
+                            var s = '<b>' + this.x + '</b><br>';
+                            s += 'Jumlah Produk: <b>' + this.y + '</b><br/>';
+                            return s;
+                        }
+                    },
+                    responsive: {
+                        rules: [{
+                            condition: {
+                                maxWidth: 500
+                            },
+                            chartOptions: {
+                                legend: {
+                                    layout: 'horizontal',
+                                    align: 'center',
+                                    verticalAlign: 'bottom'
+                                }
+                            }
+                        }]
+                    }
+
+                });
+            }
 
 
             const loadChart = (filter) => {
@@ -408,16 +515,52 @@
                 });
                 return false;
             }
+
+            const loadChartProducts = (filter) => {
+                if (filter == null) {
+                    filter = 30;
+                }
+                $.ajax({
+                    type: 'GET',
+                    url: api_url + "user/support/totalsoldproductsperdays?filter=" + filter,
+                    data: $('#formnotification').serialize(),
+                    dataType: 'json',
+                    headers: headers,
+                    success: function(data) {
+                        //console.log(data);
+                        let category = [];
+                        let serialize = [];
+                        let i = 0;
+                        $.each(data, function(index, value) {
+                            var colection = Object.keys(value).map((key) => [key, value[key]]);
+                            category[i] = colection[0][0];
+                            serialize[i] = colection[0][1];
+                            i++;
+                        });
+
+                        //console.log(category, 'category');
+                        //console.log(serialize, 'serialize');
+                        totalproductsold(category, serialize, filter);
+                    }
+                });
+                return false;
+            }
             totalsupporter();
             loadChart();
             loadChartcount();
+            loadChartProducts();
 
             const Filter = () => {
                 var filter = $('#filter').val();
                 console.log(filter);
                 loadChart(filter);
                 loadChartcount(filter);
+                loadChartProducts(filter);
             }
         })(jQuery);
     </script>
 @endsection
+@if (Auth::user()->role === 'ls_creator')
+    <h2>Kelola Produk</h2>
+    <a href="{{ route('products.index') }}">Produk Saya</a>
+@endif

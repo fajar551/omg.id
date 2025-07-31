@@ -438,4 +438,8 @@ class User extends Authenticatable implements MustVerifyEmail
         return LogOptions::defaults();
     }
     
+    public function products()
+    {
+        return $this->hasMany(\App\Models\Product::class);
+    }
 }

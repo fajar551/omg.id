@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Snap Test</title>
+</head>
+<body>
+    <h1>Simple Snap Test</h1>
+    <button onclick="testSnap()">Test Snap</button>
+    
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-yXcEzjhVAqWaf3qm"></script>
+    
+    <script>
+        function testSnap() {
+            console.log('Testing Snap...');
+            console.log('Snap available:', typeof snap !== 'undefined');
+            
+            if (typeof snap !== 'undefined' && snap.pay) {
+                console.log('✅ Snap is working!');
+                alert('Snap is working! Click OK to test popup.');
+                
+                snap.pay('test-token', {
+                    onSuccess: function(result) {
+                        console.log('Success:', result);
+                        alert('Success!');
+                    },
+                    onError: function(result) {
+                        console.log('Error:', result);
+                        alert('Error (expected with test token)!');
+                    },
+                    onClose: function() {
+                        console.log('Closed');
+                        alert('Popup closed!');
+                    }
+                });
+            } else {
+                console.log('❌ Snap is not available');
+                alert('Snap is not available!');
+            }
+        }
+        
+        // Auto test on load
+        window.onload = function() {
+            console.log('Page loaded, Snap available:', typeof snap !== 'undefined');
+        };
+    </script>
+</body>
+</html> 

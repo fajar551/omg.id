@@ -114,6 +114,8 @@
    <!-- Page Scripts -->
    @yield('scripts')
    
+   <!-- Midtrans Snap.js for Sandbox -->
+   <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-yXcEzjhVAqWaf3qm"></script>
 </body>
 
 </html>

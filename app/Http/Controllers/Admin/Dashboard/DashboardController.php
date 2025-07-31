@@ -32,6 +32,8 @@ class DashboardController extends Controller
                 'total_creator_today' => UserService::getInstance()->total_creator(['today'=>now()->format('Y-m-d')]),
                 'total_support' => SupportService::getInstance()->totalsupport(),
                 'total_support_today' => SupportService::getInstance()->total_support_today(['today'=>now()->format('Y-m-d')]),
+                'total_sold_products' => TransactionService::getInstance()->totalsoldproducts(),
+                'total_sold_products_today' => TransactionService::getInstance()->totalsoldproducts_today(),
                 'platform_amount' => TransactionService::getInstance()->platformamount(),
                 'iris_balance' => Utils::toIDR($iris_balance['balance'] ?? 0),
                 'xendit_balance' => Utils::toIDR($xendit_balance['balance'])
@@ -41,6 +43,11 @@ class DashboardController extends Controller
             // dd($ex);
             return WebResponse::error($ex);
         }
+    }
+
+    public function totalsoldproductsperdays(Request $request)
+    {
+        return TransactionService::getInstance()->totalsoldproductsperdays(null, $request->input('filter'));
     }
 
 }

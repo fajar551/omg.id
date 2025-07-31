@@ -10,9 +10,12 @@ use App\Src\Services\Eloquent\ContentService;
 use App\Src\Services\Eloquent\PageService;
 use Illuminate\Http\Request;
 use App\Src\Services\Eloquent\SupportService;
+use App\Models\Product;
+use App\Models\PaymentMethod;
 
-class CreatorController extends Controller {
-    
+class CreatorController extends Controller
+{
+
     protected $services;
     protected $contentService;
     protected $contentCategoryServices;
@@ -29,15 +32,17 @@ class CreatorController extends Controller {
         "login",
         "register",
         "logout",
-    ]; 
+    ];
 
-    public function __construct(SupportService $services, ContentService $contentService, ContentCategoryService $contentCategoryServices) {
-        $this->services= $services;
+    public function __construct(SupportService $services, ContentService $contentService, ContentCategoryService $contentCategoryServices)
+    {
+        $this->services = $services;
         $this->contentService = $contentService;
         $this->contentCategoryServices = $contentCategoryServices;
     }
 
-    public function index(Request $request) {
+    public function index(Request $request)
+    {
         !in_array($request->page_name, $this->filterRoute) ?: abort(404);
 
         try {
@@ -47,7 +52,18 @@ class CreatorController extends Controller {
             ]);
             $supporter_id = auth()->check() ? $request->user()->id : null;
             $data['support_history'] = $this->services->historypage($data['page']['user_id']);
-            $data['content'] = ContentService::getInstance()->getPublished($data['page']['user_id'], null, 3, $supporter_id,null, 1);
+            $data['content'] = ContentService::getInstance()->getPublished($data['page']['user_id'], null, 3, $supporter_id, null, 1);
+            // Tambahkan query produk milik creator
+            $type = request('type');
+            $productsQuery = Product::where('user_id', $data['page']['user_id']);
+            if ($type) {
+                $productsQuery->where('type', $type);
+            }
+            $data['products'] = $productsQuery->get();
+
+            // Tambahkan payment methods untuk modal
+            $data['paymentMethods'] = PaymentMethod::where('disabled', null)->orderBy('order', 'ASC')->get();
+
             // if (auth()->check()) {
             //     $data['supporter'] = [
             //         "email" => $request->user()->email
@@ -61,14 +77,15 @@ class CreatorController extends Controller {
             return view('client.creator.index', $data);
         } catch (\Exception $ex) {
             if ($ex instanceof NotFoundException) {
-                return abort(404, $ex->getMessage()); 
+                return abort(404, $ex->getMessage());
             }
 
-            return abort(500, $ex->getMessage()); 
+            return abort(500, $ex->getMessage());
         }
     }
 
-    public function content(Request $request) {
+    public function content(Request $request)
+    {
         !in_array($request->page_name, $this->filterRoute) ?: abort(404);
 
         try {
@@ -83,7 +100,7 @@ class CreatorController extends Controller {
             $category = $request->category;
             $data['order'] = $order;
             $data['category'] = $category;
-            $data['content'] = ContentService::getInstance()->getPublished($data['page']['user_id'], $category, 6, $supporter_id, $order,null , $slug);
+            $data['content'] = ContentService::getInstance()->getPublished($data['page']['user_id'], $category, 6, $supporter_id, $order, null, $slug);
             $data['content_category'] = ContentCategoryService::getInstance()->getCategory($data['page']['user_id']);
             // dd($data);
 
@@ -92,14 +109,15 @@ class CreatorController extends Controller {
             return view('client.creator.content', $data);
         } catch (\Exception $ex) {
             if ($ex instanceof NotFoundException) {
-                return abort(404, $ex->getMessage()); 
+                return abort(404, $ex->getMessage());
             }
 
-            return abort(500, $ex->getMessage()); 
+            return abort(500, $ex->getMessage());
         }
     }
-    
-    public function savedContent(Request $request) {
+
+    public function savedContent(Request $request)
+    {
         !in_array($request->page_name, $this->filterRoute) ?: abort(404);
 
         try {
@@ -114,18 +132,19 @@ class CreatorController extends Controller {
             // dd($data['content']);
 
             session(['url.intended' => url()->current()]);
-            
+
             return view('client.creator.saved-content', $data);
         } catch (\Exception $ex) {
             if ($ex instanceof NotFoundException) {
-                return abort(404, $ex->getMessage()); 
+                return abort(404, $ex->getMessage());
             }
 
-            return abort(500, $ex->getMessage()); 
+            return abort(500, $ex->getMessage());
         }
     }
 
-    public function contentDetail(Request $request) {
+    public function contentDetail(Request $request)
+    {
         try {
             // TODO: Validasi creator_page dengan content
             // TODO: Get data page detail 
@@ -141,14 +160,14 @@ class CreatorController extends Controller {
                 "page_name" => $request->page_name,
                 "supporter_id" => $user_id
             ]);
-            
+
             $socialShare = null;
             if (@$result['access']) {
-                $socialShare = \Share::currentPage('Baca "' .$result['content']->title .'" di ' .env('APP_NAME'))
-                                ->facebook()
-                                ->twitter()
-                                ->telegram()
-                                ->whatsapp();
+                $socialShare = \Share::currentPage('Baca "' . $result['content']->title . '" di ' . env('APP_NAME'))
+                    ->facebook()
+                    ->twitter()
+                    ->telegram()
+                    ->whatsapp();
             }
 
             session(['url.intended' => url()->current()]);
@@ -166,4 +185,46 @@ class CreatorController extends Controller {
         }
     }
 
+    public function productDetail(Request $request)
+    {
+        !in_array($request->page_name, $this->filterRoute) ?: abort(404);
+
+        try {
+            // Get page data
+            $data = $this->services->getPageData([
+                "page_name" => $request->page_name,
+                "supporter_id" => auth()->check() ? $request->user()->id : null
+            ]);
+
+            // Get product detail
+            $product = Product::where('id', $request->product_id)
+                ->where('user_id', $data['page']['user_id'])
+                ->first();
+
+            if (!$product) {
+                abort(404, 'Produk tidak ditemukan');
+            }
+
+            // Get payment methods for modal
+            $paymentMethods = PaymentMethod::where('disabled', null)
+                ->orderBy('order', 'ASC')
+                ->get();
+
+            session(['url.intended' => url()->current()]);
+
+            return view('products.product-detail-public', [
+                'product' => $product,
+                'pageName' => $request->page_name,
+                'paymentMethods' => $paymentMethods,
+                'page' => $data['page'],
+                'user' => $data['user'] ?? null
+            ]);
+        } catch (\Exception $ex) {
+            if ($ex instanceof NotFoundException) {
+                return abort(404, $ex->getMessage());
+            }
+
+            return abort(500, $ex->getMessage());
+        }
+    }
 }

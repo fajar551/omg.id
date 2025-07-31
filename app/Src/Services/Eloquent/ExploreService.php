@@ -63,7 +63,7 @@ class ExploreService {
             "per_page" => $data->perPage(),
             "total_page" => $data->total(),
             "next_page_url" => $data->nextPageUrl(),
-            "links" => (string) $data->links(),
+            "links" => $data->render(),
         ];
 
         // TODO: Improve this

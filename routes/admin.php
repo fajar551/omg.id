@@ -77,6 +77,7 @@ Route::group(['prefix' => '/'], function () {
 
 Route::group(['middleware' => ['auth', 'is_admin', 'has_access_token']], function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('home');
+    Route::get('dashboard/totalsoldproductsperdays', [DashboardController::class, 'totalsoldproductsperdays'])->name('dashboard.totalsoldproductsperdays');
 
     Route::group(['prefix' => 'master'], function () {
         Route::group(['prefix' => 'payment-method'], function () {

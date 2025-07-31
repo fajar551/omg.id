@@ -351,9 +351,9 @@
     <script type="text/javascript" src="{{ asset('/template/js/bootstrap-input-spinner.js') }}"></script>
     <script type="text/javascript" src="{{ asset('/template/vendor/select2/js/select2.min.js') }}"></script>
     @if (env('APP_ENV') == 'production')
-        <script type="text/javascript" src="https://app.midtrans.com/snap/snap.js" data-client-key="{{ Config::get('midtrans.client_key') }}"></script>
+        <script type="text/javascript" src="https://app.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-yXcEzjhVAqWaf3qm"></script>
     @else
-        <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ Config::get('midtrans.client_key') }}"></script>
+        <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-yXcEzjhVAqWaf3qm"></script>
     @endif
     <script type="text/javascript" src="{{ asset('assets/js/support-v1.1.js') }}"></script>
 @endsection

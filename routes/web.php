@@ -29,6 +29,10 @@ use App\Http\Controllers\Client\Support\SupportController;
 use App\Http\Controllers\Client\Supporter\SupporterController;
 use App\Src\Services\Eloquent\SettingService;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Client\Product\ProductController as ClientProductController;
+use App\Http\Controllers\Client\Product\ProductPaymentController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -85,6 +89,9 @@ Route::group(['prefix' => '{page_name}'], function () {
     Route::get('content/saved', [CreatorController::class, 'savedContent'])->name('creator.savedcontent')->middleware('feature:creator_page,on,404');
     Route::get('content/{slug}/detail', [CreatorController::class, 'contentDetail'])->name('creator.contentdetail')->middleware(['feature:creator_page,on,404']);
     
+    // Product detail route for public
+    Route::get('product/{product_id}/detail', [CreatorController::class, 'productDetail'])->name('product.detail.public')->middleware('feature:creator_page,on,404');
+    
     Route::group(['prefix' => 'support'], function () {
         Route::get('/', [SupportController::class, 'index'])->name('support.index');
         Route::get('{orderID}/status', [SupportController::class, 'paymentStatus'])->name('support.payment_status');
@@ -106,6 +113,10 @@ Route::group(['prefix' => '{page_name}'], function () {
 
 // @Deprecated - use support.payment_status instead
 // Route::get('/payment-status/{orderID}', [PaymentController::class, 'index'])->name('creator.payment_status.index');
+
+Route::get('/creator/{username}', [App\Http\Controllers\Client\Creator\CreatorStoreController::class, 'show'])->name('creator.store.show');
+
+
 
 Route::group(['prefix' => 'client', 'middleware' => ['verified', 'must_change_password', 'is_creator', 'is_banned', 'has_access_token']], function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('home');
@@ -291,3 +302,92 @@ Route::get('assets/js/vars.omg.js', function () {
     echo('const vars = ' . json_encode($data) . ';');
     exit();
 })->name('vars.omg.js');
+
+
+Route::middleware(['auth', 'is_creator'])->group(function () {
+    Route::resource('products', ClientProductController::class);
+    Route::post('products/{id}/toggle-hide', [ClientProductController::class, 'toggleHide'])->name('products.toggleHide');
+    Route::get('/client/page/products', [PageController::class, 'products'])->name('page.products');
+    Route::get('product/manage/{id}/edit', [ClientProductController::class, 'edit'])->name('product.manage.edit');
+    Route::delete('product/manage/delete/{id}', [ClientProductController::class, 'destroy'])->name('product.manage.destroy');
+});
+
+// Hapus route products.create agar tidak ada akses langsung ke /products/create
+
+Route::group(['prefix' => 'product/manage', 'middleware' => ['auth', 'is_creator']], function () {
+    Route::get('/', [ClientProductController::class, "index"])->name('product.index');
+    Route::get('create', [ClientProductController::class, "create"])->name('product.create');
+    Route::get('{id}/edit', [ClientProductController::class, "edit"])->name('product.edit');
+    Route::post('store', [ClientProductController::class, "store"])->name('product.store');
+    Route::put('update/{id}', [ClientProductController::class, "update"])->name('product.update');
+    Route::delete('delete/{id}', [ClientProductController::class, "destroy"])->name('product.delete');
+});
+
+// Alternative Product Payment Routes (DISABLED)
+// Route::get('{page_name}/buy/product/{id}', [App\Http\Controllers\Client\Product\ProductPurchaseController::class, 'show'])->name('product.purchase.show');
+// Route::post('{page_name}/buy/product/{id}', [App\Http\Controllers\Client\Product\ProductPurchaseController::class, 'purchase'])->name('product.purchase');
+// Route::get('{page_name}/buy/payment/{id}', [App\Http\Controllers\Client\Product\ProductPurchaseController::class, 'payment'])->name('product.payment');
+// Route::post('/product/payment/checkout', [\App\Http\Controllers\Product\ProductPaymentWebController::class, 'checkout'])->name('product.payment.checkout');
+
+// HAPUS: Test route for payment testing
+// Route::get('test/payment/{page_name}/{product_id}', function($pageName, $productId) {
+//     $product = \App\Models\Product::find($productId);
+//     if (!$product) {
+//         return redirect()->back()->with('error', 'Product not found');
+//     }
+//     
+//     $paymentMethods = \App\Models\PaymentMethod::where('disabled', null)->orderBy('order', 'ASC')->get();
+//     
+//     return view('products.purchase', compact('product', 'pageName', 'paymentMethods'));
+// })->name('test.payment');
+
+// Product download route
+Route::get('product/download/{purchase_id}', function($purchaseId) {
+    $purchase = \App\Models\ProductPurchase::with(['product.ebook', 'product.ecourse', 'product.digital'])->find($purchaseId);
+    
+    if (!$purchase) {
+        abort(404, 'Purchase not found');
+    }
+    
+    // Check if purchase is paid
+    if ($purchase->status !== 'success') {
+        abort(403, 'Payment not completed');
+    }
+    
+    // Get file path based on product type
+    $filePath = null;
+    switch ($purchase->product->type) {
+        case 'ebook':
+            $filePath = $purchase->product->ebook->file_path ?? null;
+            break;
+        case 'ecourse':
+            $filePath = $purchase->product->ecourse->file_path ?? null;
+            break;
+        case 'digital':
+            $filePath = $purchase->product->digital->file_path ?? null;
+            break;
+    }
+    
+    if (!$filePath || !file_exists($filePath)) {
+        abort(404, 'Product file not found');
+    }
+    
+    // Return file download
+    return response()->download($filePath, $purchase->product->name . '.' . pathinfo($filePath, PATHINFO_EXTENSION));
+})->name('product.download');
+
+// Webhook routes for payment status
+Route::post('webhook/product-purchase/xendit', [App\Http\Controllers\Client\Product\ProductPurchaseWebhookController::class, 'xenditWebhook']);
+Route::post('webhook/product-purchase/midtrans', [App\Http\Controllers\Client\Product\ProductPurchaseWebhookController::class, 'midtransWebhook']);
+
+// Product Payment Routes
+Route::post('/product/payment/process', [App\Http\Controllers\Client\Product\ProductPaymentController::class, 'processPayment'])->name('product.payment.process');
+Route::get('/product/payment/{purchase_id}/status', [App\Http\Controllers\Client\Product\ProductPaymentController::class, 'paymentStatus'])->name('product.payment.status');
+Route::post('/product/payment/webhook', [App\Http\Controllers\Client\Product\ProductPaymentController::class, 'webhook'])->name('product.payment.webhook');
+
+// Email Monitoring Routes (Admin Only)
+Route::middleware(['auth', 'is_admin'])->group(function () {
+    Route::get('/admin/email-monitoring', [App\Http\Controllers\Admin\EmailMonitoringController::class, 'index'])->name('admin.email-monitoring');
+    Route::post('/admin/test-product-email/{purchase_id}', [App\Http\Controllers\Admin\EmailMonitoringController::class, 'testEmail'])->name('admin.test-product-email');
+    Route::get('/admin/email-logs', [App\Http\Controllers\Admin\EmailMonitoringController::class, 'logs'])->name('admin.email-logs');
+});

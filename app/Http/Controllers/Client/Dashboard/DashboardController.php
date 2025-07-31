@@ -7,7 +7,7 @@ use App\Src\Exceptions\NotFoundException;
 use App\Src\Helpers\ApiResponse;
 use App\Src\Services\Eloquent\SupportService;
 use App\Src\Services\Eloquent\UserBalanceService;
-use App\Src\Services\Xendit\PayoutService;
+use App\Src\Services\Xendit\PayoutService; 
 use Illuminate\Http\Request;
 use Magarrent\LaravelCurrencyFormatter\Facades\Currency;
 
@@ -45,16 +45,18 @@ class DashboardController extends Controller
                 "total_amount" => Currency::currency("IDR")->format($result["active"]+$result["pending"]),
                 "amount_this_month" => Currency::currency("IDR")->format(SupportService::getInstance()->amountpermonth($user_id)),
                 "total_support" => SupportService::getInstance()->totalsupport($user_id),
-                "total_payout" => Currency::currency("IDR")->format(PayoutService::getInstance()->totalpayout($user_id))
+                "total_payout" => Currency::currency("IDR")->format(PayoutService::getInstance()->totalpayout($user_id)),
+                "total_sold_products" => \App\Src\Services\Eloquent\TransactionService::getInstance()->totalsoldproducts(['user_id' => $user_id]),
+                "total_sold_products_today" => \App\Src\Services\Eloquent\TransactionService::getInstance()->totalsoldproducts_today(['user_id' => $user_id])
             ];
 
             return view('client.dashboard.index', $data);
         } catch (\Exception $ex) {
             if ($ex instanceof NotFoundException) {
-                return abort(404, $ex->getMessage()); 
+                abort(404, $ex->getMessage()); 
+            } else {
+                abort(500, $ex->getMessage()); 
             }
-
-            return abort(500, $ex->getMessage()); 
         }
     }
 

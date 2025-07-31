@@ -19,14 +19,16 @@ use Str;
 use InvalidArgumentException;
 use File;
 
-class WidgetService implements IBaseService {
+class WidgetService implements IBaseService
+{
 
     protected $model;
     protected $validator;
     protected $widgetType = null;
     protected $modelUserWidget;
 
-    public function __construct(Widget $model, WidgetValidator $validator, UserWidget $modelUserWidget) {
+    public function __construct(Widget $model, WidgetValidator $validator, UserWidget $modelUserWidget)
+    {
         $this->model = $model;
         $this->validator = $validator;
         $this->modelUserWidget = $modelUserWidget;
@@ -42,12 +44,12 @@ class WidgetService implements IBaseService {
         return $this->validator;
     }
 
-    public function setWidgetType($type)
+    public function setWidgetType(string $type): void
     {
         $this->widgetType = $type;
     }
 
-    public function getWidgetType()
+    public function getWidgetType(): string
     {
         if (!$this->widgetType) {
             throw new InvalidArgumentException("Invalid widget type!");
@@ -59,7 +61,7 @@ class WidgetService implements IBaseService {
     public function store(array $data)
     {
         $this->validator->validateStore($data);
-        
+
         $model = $this->model;
         $model->name = ucwords($data["name"]);
         $model->key = Str::slug($data["key"], '_');
@@ -72,7 +74,7 @@ class WidgetService implements IBaseService {
     public function updateOrCreate(array $data)
     {
         $this->model->updateOrCreate(
-            ['key' => $data['key'] ],
+            ['key' => $data['key']],
             ['name' => $data['name'], 'key' => $data['key'], 'type' => Str::slug($data["type"], '_')]
         );
     }
@@ -86,7 +88,7 @@ class WidgetService implements IBaseService {
         $this->validator->validateWidgetType(["type" => $type]);
 
         $cfgWidgets = config("settings.widget.{$type}");
-        $existWidget = $this->model->where("type", $type)->pluck('key')->toArray(); 
+        $existWidget = $this->model->where("type", $type)->pluck('key')->toArray();
 
         // Check if there's new widget defined from config/settings.php
         foreach ($cfgWidgets as $wKey => $wgt) {
@@ -117,7 +119,7 @@ class WidgetService implements IBaseService {
     {
         $this->validator->validateWidgetKey(["key" => $key]);
 
-        $widgetDir = config("view.widget_paths") ."/{$this->getWidgetType()}/$key";
+        $widgetDir = config("view.widget_paths") . "/{$this->getWidgetType()}/$key";
         $availableTheme = [];
 
         if (File::exists($widgetDir)) {
@@ -126,7 +128,7 @@ class WidgetService implements IBaseService {
 
                 if ((Utils::strContains("dev", $name) || !Utils::strContains("dev", $name)) && in_array(config('app.env'), ['local'])) {
                     $availableTheme[] = $name;
-                } else if(!Utils::strContains("dev", $name)) {
+                } else if (!Utils::strContains("dev", $name)) {
                     $availableTheme[] = $name;
                 }
             }
@@ -161,7 +163,7 @@ class WidgetService implements IBaseService {
         $this->validator->validateWidgetKey(["key" => $key]);
 
         $model = $this->model->where("key", $key)->first();
-    
+
         if (!$model->settings()->where("user_id", $userid)->count()) {
             $this->seedSetting([
                 "user_id" => $userid,
@@ -188,7 +190,7 @@ class WidgetService implements IBaseService {
         }
 
         if ($settingOnly) {
-            return $model->settings()->where("user_id", $userid)->get()->map(function($model) {
+            return $model->settings()->where("user_id", $userid)->get()->map(function ($model) {
                 return $this->formatWidgetSettingResult($model);
             });
         }
@@ -305,7 +307,7 @@ class WidgetService implements IBaseService {
             $key = $data["key"];
 
             if (array_key_exists($key, $settings)) {
-                $config = $settings[$key]; 
+                $config = $settings[$key];
 
                 foreach ($config as $keyConfig => $value) {
                     $this->addSetting([
@@ -319,7 +321,8 @@ class WidgetService implements IBaseService {
         }
     }
 
-    public function deleteUnknownSettingName(array $data) {
+    public function deleteUnknownSettingName(array $data)
+    {
         // TODO: Test and check this
         $userid = @$data["user_id"];
         $key = @$data["key"];
@@ -346,12 +349,12 @@ class WidgetService implements IBaseService {
     public function getWidgetSettingMap($key, $userid)
     {
         $widgetSettings = $this->getWidgetWithSettings($key, $userid, true);
-        $mapSetting = $widgetSettings->map(function($item) {
-            return [ $item['name'] => $item['value'] ];
+        $mapSetting = $widgetSettings->map(function ($item) {
+            return [$item['name'] => $item['value']];
         })->toArray();
 
         $setting = [];
-        array_map(function($value) use(&$setting) {
+        array_map(function ($value) use (&$setting) {
             foreach ($value as $key => $value2) {
                 $setting[$key] = [
                     "name" => $key,
@@ -369,7 +372,7 @@ class WidgetService implements IBaseService {
 
         $userid = $key->user_id;
         // $widgetSettings = $this->getWidgetWithSettings($data["key"], $userid, true);
-        
+
         $extraData = [];
         $data["test"] = (isset($data["test"]) && (in_array($data["test"], ["1", "true"])));
         $data["real_data"] = (isset($data["real_data"]) && (in_array($data["real_data"], ["1", "true"])));
@@ -391,30 +394,30 @@ class WidgetService implements IBaseService {
 
                 // Dummy result for test/preview mode
                 // if (!$data["real_data"]) {
-                    $newTip = config("settings.default_new_tip");
+                $newTip = config("settings.default_new_tip");
                 // }
 
                 if ($data["real_data"]) {
                     // TODO: add min support from setting to display notification 
                     $supportsQ = Support::select("id", "creator_id", "supporter_id", "invoice_id", "name", "message", "email", "status", "media_share", "created_at")
-                                        ->where("creator_id", $userid)
-                                        ->paidSuccess()
-                                        ->with([
-                                            'supporter' => function($q) {
-                                                $q->select("id", "name", "username", "email", "profile_picture");
-                                            },
-                                            'details' => function($q) {
-                                                $q->select("id", "support_id", "item_id", "price", "qty", "total");
-                                            },
-                                            'details.item' => function($q) {
-                                                $q->select("id", "name");
-                                            },
-                                            'invoice' => function($q) {
-                                                $q->select("id", "order_id");
-                                            },
-                                        ])
-                                        ->latest()
-                                        ->first();
+                        ->where("creator_id", $userid)
+                        ->paidSuccess()
+                        ->with([
+                            'supporter' => function ($q) {
+                                $q->select("id", "name", "username", "email", "profile_picture");
+                            },
+                            'details' => function ($q) {
+                                $q->select("id", "support_id", "item_id", "price", "qty", "total");
+                            },
+                            'details.item' => function ($q) {
+                                $q->select("id", "name");
+                            },
+                            'invoice' => function ($q) {
+                                $q->select("id", "order_id");
+                            },
+                        ])
+                        ->latest()
+                        ->first();
 
                     if ($supportsQ) {
                         $items = [];
@@ -454,8 +457,8 @@ class WidgetService implements IBaseService {
 
                 if ($data["key"] == "notification") {
                     $widgetSettings = $this->getWidgetWithSettings($data["key"], $userid, true);
-                    $mapSetting = $widgetSettings->map(function($item) {
-                        return [ $item['name'] => $item['value'] ];
+                    $mapSetting = $widgetSettings->map(function ($item) {
+                        return [$item['name'] => $item['value']];
                     })->toArray();
 
                     if (!isset($data["ntf_template_text"])) {
@@ -470,8 +473,8 @@ class WidgetService implements IBaseService {
                     if (!$data["test"]) {
                         if (!isset($data["ntf_min_support"])) {
                             $data["ntf_min_support"] = array_column($mapSetting, "ntf_min_support")[0] ?? 0;
-                        } 
-                        
+                        }
+
                         if ($newTip["amount"] < $data["ntf_min_support"]) {
                             return "Support amount less than Min Suppport (no notification send)";
                         }
@@ -494,14 +497,14 @@ class WidgetService implements IBaseService {
                             if ($videoId) {
                                 $isMediaAvailable = true;
                             }
-                        } else if($data["real_data"]) {
+                        } else if ($data["real_data"]) {
                             if ($supportsQ) {
                                 $mediaShareData = $supportsQ->media_share;
                                 if ($mediaShareData) {
                                     $url = $mediaShareData['url'];
                                     $videoId = Utils::getQParamsVal($url, 'v');
                                     $startSeconds = $mediaShareData['startSeconds'] ?? 0;
-    
+
                                     if ($videoId) {
                                         $isMediaAvailable = true;
                                     }
@@ -510,12 +513,12 @@ class WidgetService implements IBaseService {
                         }
 
                         if ($isMediaAvailable) {
-                            $maxDuration = $mdsSetting->max_duration; 
+                            $maxDuration = $mdsSetting->max_duration;
                             $pricePerSecond = $mdsSetting->price_per_second;
                             if ($pricePerSecond <= 0) {
                                 $pricePerSecond = 1;    // Avoid devide by zero. the price amount should be gt 0
                             }
-                        
+
                             $tipAmount = $newTip['amount'];
                             $maxDurationSupport = $tipAmount / $pricePerSecond;
                             if ($maxDurationSupport <= $maxDuration && $maxDurationSupport > 0) {
@@ -575,7 +578,7 @@ class WidgetService implements IBaseService {
                         "test" => $data["test"],
                         "new_tip" => $newTip,
                     ];
-    
+
                     WebhookService::getInstance()->send($webhookData);
                 }
 
@@ -588,14 +591,14 @@ class WidgetService implements IBaseService {
                         "media_share" => $data["media_share"],
                     ]
                 ];
-            case 'leaderboard': 
+            case 'leaderboard':
                 $leaderBoards = [];
 
                 $shortBy = "nominal";
                 if (isset($data["ldb_sortby"]) && $data["ldb_sortby"] == "nominal") {
                     $shortBy = "nominal";
-                } 
-                
+                }
+
                 if (isset($data["ldb_sortby"]) && $data["ldb_sortby"] == "unit") {
                     $shortBy = "unit";
                 }
@@ -604,31 +607,31 @@ class WidgetService implements IBaseService {
                 if (!$data["real_data"]) {
                     if (isset($data["ldb_support_count"])) {
                         $startPrice = 5000;
-                        for ($i=1; $i < $data["ldb_support_count"]; $i++) { 
+                        for ($i = 1; $i < $data["ldb_support_count"]; $i++) {
                             $leaderBoards[] = [
                                 "name" => "Someone $i",
-                                "amount" => $amount = ($shortBy == "unit" ? $units = rand(1,10) : $startPrice * $i),
+                                "amount" => $amount = ($shortBy == "unit" ? $units = rand(1, 10) : $startPrice * $i),
                                 "formated_amount" => ($shortBy == "unit" ? __("$units Units") : Utils::toIDR($amount)),
                                 "message" => __("Good Job!"),
                             ];
                         }
                     }
                 }
-                
+
                 if ($data["real_data"]) {
                     $supportsQ = Support::select("id", "creator_id", "supporter_id", "name", "message", "email", "status", "created_at")
-                                            ->where("creator_id", $userid)
-                                            ->paidSuccess()
-                                            ->with([
-                                                'supporter' => function($q) {
-                                                    $q->select("id", "name", "username", "email");
-                                                },
-                                            ]);
-                    
+                        ->where("creator_id", $userid)
+                        ->paidSuccess()
+                        ->with([
+                            'supporter' => function ($q) {
+                                $q->select("id", "name", "username", "email");
+                            },
+                        ]);
+
                     if ($shortBy == "nominal") {
                         $supportsQ->withSum('details', 'total');
-                    } 
-                    
+                    }
+
                     if ($shortBy == "unit") {
                         $supportsQ->withCount('details as details_sum_total');
                     }
@@ -653,17 +656,16 @@ class WidgetService implements IBaseService {
                             $leaderBoards[$support["email"]]["amount"] += $support["details_sum_total"];
                         }
 
-                        if($shortBy == "unit") {
-                            $leaderBoards[$support["email"]]["formated_amount"] = $leaderBoards[$support["email"]]["amount"] .__(" Units");
+                        if ($shortBy == "unit") {
+                            $leaderBoards[$support["email"]]["formated_amount"] = $leaderBoards[$support["email"]]["amount"] . __(" Units");
                         } else {
                             $leaderBoards[$support["email"]]["formated_amount"] = Utils::toIDR($leaderBoards[$support["email"]]["amount"]);
                         }
                     }
-
                 }
 
                 $leaderBoards = array_values($leaderBoards);
-                usort($leaderBoards, function($a, $b) {
+                usort($leaderBoards, function ($a, $b) {
                     // TRICK: you could use a > b or a - b or a <=> b for sorting in an ascending order. 
                     // For a descending order just the swap position of a and b
                     return $b['amount'] <=> $a['amount'];
@@ -688,20 +690,20 @@ class WidgetService implements IBaseService {
                 $goals = [];
                 $user = User::find($userid);
                 $creatorLink = $user->page ? $user->page->page_url : $user->username;
-                $sortCreatorLink =  request()->getHttpHost() ."/$creatorLink/support";
+                $sortCreatorLink =  request()->getHttpHost() . "/$creatorLink/support";
                 $creatorLink = route('support.index', ['page_name' => $creatorLink]);
 
                 // Dummy result for test/preview mode
                 // if (!$data["real_data"]) {
-                    $goals = [
-                        "title" => isset($data["goa_source"]) && $data["goa_source"] == "tip-history" ? ($data["goa_custom_title"] ?? "Example Goal") : "Example Goal",
-                        "target" => $target = isset($data["goa_source"]) && $data["goa_source"] == "tip-history" ? ($data["goa_custom_target"] ?? 0) : 0,
-                        "target_achieved" => $targetAchieved = 0,
-                        "creator_link" => $creatorLink,
-                        "short_creator_link" => $sortCreatorLink,
-                        "formated_target" => Utils::toIDR($target),
-                        "formated_target_achieved" => Utils::toIDR($targetAchieved),
-                    ];
+                $goals = [
+                    "title" => isset($data["goa_source"]) && $data["goa_source"] == "tip-history" ? ($data["goa_custom_title"] ?? "Example Goal") : "Example Goal",
+                    "target" => $target = isset($data["goa_source"]) && $data["goa_source"] == "tip-history" ? ($data["goa_custom_target"] ?? 0) : 0,
+                    "target_achieved" => $targetAchieved = 0,
+                    "creator_link" => $creatorLink,
+                    "short_creator_link" => $sortCreatorLink,
+                    "formated_target" => Utils::toIDR($target),
+                    "formated_target_achieved" => Utils::toIDR($targetAchieved),
+                ];
                 // }
 
                 if ($data["real_data"]) {
@@ -717,8 +719,8 @@ class WidgetService implements IBaseService {
                         ];
 
                         $supportsQ = Support::select("id", "creator_id", "supporter_id", "name", "message", "email", "status", "created_at")
-                                        ->where("creator_id", $userid)
-                                        ->paidSuccess();
+                            ->where("creator_id", $userid)
+                            ->paidSuccess();
 
                         if (isset($data["goa_source"]) && $data["goa_source"] == "tip-history") {
                             $supportsQ->withSum('invoice', 'creator_amount');
@@ -745,7 +747,6 @@ class WidgetService implements IBaseService {
                             $goals["formated_target"] = Utils::toIDR($goals["target"]);
                             $goals["formated_target_achieved"] = Utils::toIDR($goals["target_achieved"]);
                         }
-
                     } else {
                         $goals["title"] = __("No active goal");
                     }
@@ -754,7 +755,7 @@ class WidgetService implements IBaseService {
                 $goals['progress'] = 0;
                 if (isset($data["goa_show_progress"]) && $data["goa_show_progress"]) {
                     if (isset($goals["target"]) && $goals["target"] > 0) {
-                        $goals['progress'] = round( ($goals["target_achieved"] / $goals["target"]) * 100, 2 );
+                        $goals['progress'] = round(($goals["target_achieved"] / $goals["target"]) * 100, 2);
                     }
                 }
 
@@ -781,7 +782,7 @@ class WidgetService implements IBaseService {
                 if (isset($data["goa_show_link"]) && !$data["goa_show_link"]) {
                     // unset($goals["creator_link"]);
                 }
-                
+
                 if (!isset($data["goa_show_link"])) {
                     // unset($goals["creator_link"]);
                 }
@@ -806,54 +807,54 @@ class WidgetService implements IBaseService {
 
                 // Dummy result for test/preview mode
                 // if (!$data["real_data"]) {
-                    if (isset($data["mrq_item_count"])) {
-                        $startPrice = 10000;
-                        for ($i=1; $i <= $data["mrq_item_count"]; $i++) { 
-                            $message = [];
-                            if (isset($data["mrq_show_support_message"]) && $data["mrq_show_support_message"]) {
-                                $message["message"] = __("message.default_supporter_test_message");
-                            }
-
-                            $marqueeData[] = array_merge($message, [
-                                "name" => "Someone $i",
-                                "ammount" => $total = ($startPrice * $i),
-                                "formated_amount" => Utils::toIDR($total),
-                                "items" => [
-                                    [
-                                        "name" => Utils::toIDR($startPrice),
-                                        "qty" => $i,
-                                        "price" => $startPrice,
-                                        "total" => $total,
-                                        "formated_price" => Utils::toIDR($startPrice),
-                                        "formated_total" => Utils::toIDR($total),
-                                    ],
-                                ]
-                            ]);
+                if (isset($data["mrq_item_count"])) {
+                    $startPrice = 10000;
+                    for ($i = 1; $i <= $data["mrq_item_count"]; $i++) {
+                        $message = [];
+                        if (isset($data["mrq_show_support_message"]) && $data["mrq_show_support_message"]) {
+                            $message["message"] = __("message.default_supporter_test_message");
                         }
+
+                        $marqueeData[] = array_merge($message, [
+                            "name" => "Someone $i",
+                            "ammount" => $total = ($startPrice * $i),
+                            "formated_amount" => Utils::toIDR($total),
+                            "items" => [
+                                [
+                                    "name" => Utils::toIDR($startPrice),
+                                    "qty" => $i,
+                                    "price" => $startPrice,
+                                    "total" => $total,
+                                    "formated_price" => Utils::toIDR($startPrice),
+                                    "formated_total" => Utils::toIDR($total),
+                                ],
+                            ]
+                        ]);
                     }
+                }
                 // }
 
                 if ($data["real_data"]) {
                     $supportsQ = Support::select("id", "creator_id", "supporter_id", "name", "message", "email", "status", "created_at")
-                                        ->where("creator_id", $userid)
-                                        ->paidSuccess()
-                                        ->with([
-                                            'supporter' => function($q) {
-                                                $q->select("id", "name", "username", "email");
-                                            },
-                                            'details' => function($q) {
-                                                $q->select("id", "support_id", "item_id", "price", "qty", "total");
-                                            },
-                                            'details.item' => function($q) {
-                                                $q->select("id", "name");
-                                            },
-                                        ])
-                                        ->latest();
+                        ->where("creator_id", $userid)
+                        ->paidSuccess()
+                        ->with([
+                            'supporter' => function ($q) {
+                                $q->select("id", "name", "username", "email");
+                            },
+                            'details' => function ($q) {
+                                $q->select("id", "support_id", "item_id", "price", "qty", "total");
+                            },
+                            'details.item' => function ($q) {
+                                $q->select("id", "name");
+                            },
+                        ])
+                        ->latest();
 
                     if (isset($data["mrq_item_count"])) {
                         $supportsQ->take($data["mrq_item_count"]);
                     }
-                    
+
                     $supportsQ = $supportsQ->get();
                     if ($supportsQ) {
                         $marqueeData = [];
@@ -891,8 +892,8 @@ class WidgetService implements IBaseService {
                 }
 
                 $widgetSettings = $this->getWidgetWithSettings($data["key"], $userid, true);
-                $mapSetting = $widgetSettings->map(function($item) {
-                    return [ $item['name'] => $item['value'] ];
+                $mapSetting = $widgetSettings->map(function ($item) {
+                    return [$item['name'] => $item['value']];
                 })->toArray();
 
                 // Get uptodate data from db for additional messages
@@ -931,7 +932,7 @@ class WidgetService implements IBaseService {
         ];
 
         if ($includeSetting) {
-            $result["settings"] = $model->settings()->get()->map(function($model) {
+            $result["settings"] = $model->settings()->get()->map(function ($model) {
                 return $this->formatWidgetSettingResult($model);
             });
         }
@@ -947,5 +948,4 @@ class WidgetService implements IBaseService {
             "value" => $model->value,
         ];
     }
-
 }

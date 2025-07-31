@@ -79,6 +79,26 @@
                                 <div class="card card-dark-80">
                                     <div class="card-body">
                                         <div>
+                                            <h3>{{ $total_sold_products }}</h3>
+                                        </div>
+                                        <div>@lang('Total Products Sold')</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-4">
+                                <div class="card card-dark-80">
+                                    <div class="card-body">
+                                        <div>
+                                            <h3>{{ $total_sold_products_today }}</h3>
+                                        </div>
+                                        <div>@lang('Products Sold Today')</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-4">
+                                <div class="card card-dark-80">
+                                    <div class="card-body">
+                                        <div>
                                             <h3>{{ $platform_amount }}</h3>
                                         </div>
                                         <div>@lang('Platform Amount')</div>
@@ -127,6 +147,29 @@
                                 </div>
                                 <figure class="highcharts-figure">
                                     <div id="summary"></div>
+                                </figure>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="card shadow-none mt-3">
+                            <div class="card-body p-0 mb-3">
+                                <div class="col-md-4 mb-3" style="display: flex; justify-content: flex-end;">
+                                    <select name="filter" id="filter2" onchange="Filter2()" class="form-select">
+                                        <option value="30">30 Days</option>
+                                        <option value="15">15 Days</option>
+                                        <option value="7">7 Days</option>
+                                    </select>
+                                </div>
+                                <figure class="highcharts-figure">
+                                    <div id="productsold"></div>
                                 </figure>
                             </div>
                         </div>
@@ -252,8 +295,8 @@
                     let i=0;
                     $.each(data, function( index, value ) {
                         var colection =Object.keys(value).map((key) => [key, value[key]]);
-                        category[i]=colection[0][0];
-                        serialize[i]=colection[0][1];
+                        category[i] = colection[0][0];
+                        serialize[i] = colection[0][1];
                         i++;
                     });
 
@@ -264,12 +307,126 @@
             });
             return false;
         }
+
+        const charts2 =(categori,serie, filter) =>{
+            Highcharts.chart('productsold', {
+                title: {
+                    text: 'Jumlah Produk Terjual Dalam '+filter+' Hari terakir',
+                    style: {
+                        color: '#6c6c6d',
+                    }
+                },
+                subtitle: {
+                    text: ''
+                },
+                chart : {
+                    backgroundColor: "rgba(0,0,0,0)"
+                    //color: "#fff"
+                },
+                yAxis: {
+                    title: {
+                        text: 'Jumlah Produk',
+                        style: {
+                            color: '#6c6c6d',
+                        }
+                    }
+                },
+                xAxis: {
+                    accessibility: {
+                        rangeDescription: 'Jumlah Produk',
+                        style: {
+                            color: '#fff',
+                        }
+                    },
+                    categories: categori,
+                },
+
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'middle'
+                },
+
+
+                series: [{
+                    showInLegend : false,
+                    name : '',
+                    data: serie,
+                    lineWidth: 5,
+                    color: '#FF6B35'
+                }],
+                tooltip: {
+                    shared: false,
+                    formatter: function() {
+                        var serie = this.series;
+                        var index = this.series.data.indexOf(this.point);
+                        var bilangan = this.y;
+
+                        var s = '<b>' + this.x + '</b><br>';
+                        s += 'Jumlah Produk: <b>' + bilangan + '</b><br/>';
+                        return s;
+                    }
+                },
+                responsive: {
+                    rules: [{
+                        condition: {
+                            maxWidth: 500
+                        },
+                        chartOptions: {
+                            legend: {
+                                layout: 'horizontal',
+                                align: 'center',
+                                verticalAlign: 'bottom'
+                            }
+                        }
+                    }]
+                }
+
+            });
+        }
+
+        const loadChart2 = (filter) => {
+            if (filter==null) {
+                filter = 30;
+            }
+            $.ajax({
+                type: 'GET',
+                url: "{{url('backend/admin/dashboard/totalsoldproductsperdays')}}?filter="+filter,
+                data: $('#formnotification').serialize(),
+                dataType: 'json',
+                headers : headers,
+                success: function(data){
+                    //console.log(data);
+                    let category = [];
+                    let serialize =[];
+                    let i=0;
+                    $.each(data, function( index, value ) {
+                        var colection =Object.keys(value).map((key) => [key, value[key]]);
+                        category[i] = colection[0][0];
+                        serialize[i] = colection[0][1];
+                        i++;
+                    });
+
+                    //console.log(category,'category');
+                    // console.log(serialize,'serialize');
+                    charts2(category,serialize,filter);
+                }
+            });
+            return false;
+        }
         loadChart();
+        loadChart2();
 
         const Filter = () => {
             var filter = $('#filter').val();
             console.log(filter);
             loadChart(filter);
+        }
+
+        const Filter2 = () => {
+            var filter = $('#filter2').val();
+            console.log(filter);
+            loadChart2(filter);
         }
     </script>
 @endsection

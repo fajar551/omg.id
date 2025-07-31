@@ -243,12 +243,16 @@ Route::group(['prefix' => 'page', 'middleware' => ['auth:sanctum', 'localization
     Route::get('{file_name}/previewavatar', [PageController::class, "previewavatar"])->name("api.pageavatar.preview")->withoutMiddleware(['auth:sanctum']);
 });
 
-Route::group(['prefix' => 'support', 'middleware' => ['guest:web']], function () {
-    Route::middleware('throttle:100,1')->group(function () {
-        Route::post('snaptoken', [SupportController::class, "show"]);
-    });
-    Route::post('snapcharge', [SupportController::class, "snapcharge"]);
+Route::group(['prefix' => 'support', 'middleware' => ['auth:sanctum', 'localization']], function () {
     Route::post('paymentcharge', [SupportController::class, "paymentcharge"]);
+    Route::post('snapcharge', [SupportController::class, "snapcharge"]);
+    Route::post('show', [SupportController::class, "show"]);
+    Route::get('history', [SupportController::class, "gethistory"]);
+    Route::get('totalcountperdays', [SupportController::class, "totalcountperdays"]);
+    Route::get('totalamountperdays', [SupportController::class, "totalamountperdays"]);
+    Route::get('totalsoldproductsperdays', [SupportController::class, "totalsoldproductsperdays"]);
+    Route::get('totalsoldproductsamountperdays', [SupportController::class, "totalsoldproductsamountperdays"]);
+    Route::get('platformamountperdays', [SupportController::class, "platformamountperdays"]);
 });
 
 Route::group(['prefix' => 'widget'], function () {
@@ -350,3 +354,10 @@ Route::group(['prefix' => 'notifications', 'middleware' => ['auth:sanctum', 'loc
 });
 
 Route::post('guideupdate', [GuideController::class, 'update'])->middleware(['auth:sanctum']);
+
+Route::group(['prefix' => 'product', 'middleware' => ['auth:sanctum', 'localization']], function () {
+    Route::post('paymentcharge', [\App\Http\Controllers\API\Product\ProductPaymentController::class, 'paymentcharge']);
+});
+
+// Product payment without authentication (for public access)
+Route::post('product/paymentcharge', [\App\Http\Controllers\API\Product\ProductPaymentController::class, 'paymentcharge'])->withoutMiddleware(['auth:sanctum']);

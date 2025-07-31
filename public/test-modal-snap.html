@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Modal Snap</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: white; margin: 15% auto; padding: 20px; border-radius: 5px; width: 80%; max-width: 500px; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close:hover { color: black; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .log { background: #f8f9fa; padding: 10px; border: 1px solid #dee2e6; font-family: monospace; max-height: 200px; overflow-y: auto; }
+        .success { background-color: #d4edda; }
+        .error { background-color: #f8d7da; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Modal Snap Integration</h1>
+    
+    <button onclick="openModal()">Open Payment Modal</button>
+    <button onclick="testSnapDirect()">Test Snap Direct</button>
+    
+    <div class="log" id="console-log"></div>
+    
+    <!-- Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Payment Modal</h2>
+            <p>This simulates the product payment modal</p>
+            <button onclick="testPayment()">Test Payment</button>
+            <button onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Load Snap.js -->
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-yXcEzjhVAqWaf3qm"></script>
+    
+    <script>
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logDiv = document.getElementById('console-log');
+            logDiv.innerHTML += `[${timestamp}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function openModal() {
+            log('Opening payment modal...');
+            document.getElementById('paymentModal').style.display = 'block';
+            log('Modal opened');
+        }
+        
+        function closeModal() {
+            log('Closing payment modal...');
+            document.getElementById('paymentModal').style.display = 'none';
+            log('Modal closed');
+        }
+        
+        function testPayment() {
+            log('=== Testing Payment in Modal ===');
+            log('Snap available: ' + (typeof snap !== 'undefined'));
+            log('Snap.pay function: ' + (typeof snap.pay === 'function'));
+            
+            if (typeof snap !== 'undefined' && snap.pay) {
+                log('✅ Snap is available, testing payment...');
+                
+                // Close modal first
+                closeModal();
+                
+                // Small delay then test snap
+                setTimeout(function() {
+                    try {
+                        log('Calling snap.pay with dummy token...');
+                        snap.pay('test-token-' + Date.now(), {
+                            onSuccess: function(result) {
+                                log('✅ Payment Success: ' + JSON.stringify(result));
+                                alert('Payment Success!');
+                            },
+                            onPending: function(result) {
+                                log('⏳ Payment Pending: ' + JSON.stringify(result));
+                                alert('Payment Pending!');
+                            },
+                            onError: function(result) {
+                                log('❌ Payment Error: ' + JSON.stringify(result));
+                                alert('Payment Error (expected with dummy token)!');
+                            },
+                            onClose: function() {
+                                log('🚪 Payment Popup Closed');
+                                alert('Payment Popup Closed!');
+                            }
+                        });
+                        log('✅ snap.pay called successfully');
+                    } catch (error) {
+                        log('❌ Error calling snap.pay: ' + error.message);
+                        alert('Error: ' + error.message);
+                    }
+                }, 300);
+            } else {
+                log('❌ Snap is not available');
+                alert('Snap is not available!');
+            }
+        }
+        
+        function testSnapDirect() {
+            log('=== Testing Snap Direct ===');
+            log('Snap available: ' + (typeof snap !== 'undefined'));
+            
+            if (typeof snap !== 'undefined' && snap.pay) {
+                log('✅ Snap is available, testing direct...');
+                
+                try {
+                    snap.pay('test-token-direct', {
+                        onSuccess: function(result) {
+                            log('✅ Direct Payment Success: ' + JSON.stringify(result));
+                            alert('Direct Payment Success!');
+                        },
+                        onError: function(result) {
+                            log('❌ Direct Payment Error: ' + JSON.stringify(result));
+                            alert('Direct Payment Error (expected)!');
+                        },
+                        onClose: function() {
+                            log('🚪 Direct Payment Popup Closed');
+                            alert('Direct Payment Popup Closed!');
+                        }
+                    });
+                    log('✅ Direct snap.pay called successfully');
+                } catch (error) {
+                    log('❌ Error calling direct snap.pay: ' + error.message);
+                    alert('Direct Error: ' + error.message);
+                }
+            } else {
+                log('❌ Snap is not available for direct test');
+                alert('Snap is not available for direct test!');
+            }
+        }
+        
+        // Auto-check on page load
+        window.onload = function() {
+            log('=== Page Loaded ===');
+            log('Snap available: ' + (typeof snap !== 'undefined'));
+            log('Snap.pay function: ' + (typeof snap.pay === 'function'));
+            
+            if (typeof snap !== 'undefined') {
+                log('✅ Snap.js loaded successfully');
+            } else {
+                log('❌ Snap.js not loaded');
+            }
+        };
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('paymentModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        };
+        
+        log('Script loaded, waiting for Snap.js...');
+    </script>
+</body>
+</html> 

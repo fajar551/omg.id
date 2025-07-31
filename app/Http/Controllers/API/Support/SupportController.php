@@ -12,6 +12,7 @@ use App\Src\Jobs\SendEmailInvoiceJob;
 use App\Src\Services\Eloquent\SupportService;
 use App\Src\Services\Eloquent\TransactionService;
 use App\Src\Validators\PaymentValidator;
+use App\Src\Services\Midtrans\ProductPaymentService;
 
 class SupportController extends Controller
 {
@@ -21,15 +22,18 @@ class SupportController extends Controller
     protected $modelPaymentMethod;
     protected $paymentValidator;
     protected $supportservice;
+    protected $productPaymentService;
 
     public function __construct(
         PaymentService $services,
+        ProductPaymentService $productPaymentService,
         XenditPaymentService $XenditServices,
         PaymentMethod $modelPaymentMethod,
         PaymentValidator $paymentValidator,
         SupportService $supportservice
     ) {
         $this->services = $services;
+        $this->productPaymentService = $productPaymentService;
         $this->XenditServices = $XenditServices;
         $this->modelPaymentMethod = $modelPaymentMethod;
         $this->paymentValidator = $paymentValidator;
@@ -75,18 +79,7 @@ class SupportController extends Controller
     {
         \DB::beginTransaction();
         try {
-            // $detailemail = SupportService::getInstance()->getbyOrderid('b353e4ec-9ba0-31ec-9c64-ce56fe01ca88');
-            // SendEmailInvoiceJob::dispatch(array('email' => 'tania.hastuti@haryanto.biz', 'data' => $detailemail));
-            // \dd($request->input());
-            // $this->paymentValidator->validateStore($request->input());
-            // $paymentMethod = $this->modelPaymentMethod->find($request->input('payment_method_id'));
-            // if ($paymentMethod->bank_name == 'sahabat_sampoerna' || $paymentMethod->payment_type =='ovo' || $paymentMethod->payment_type =='linkaja' || $paymentMethod->payment_type == 'dana') {
-                $result = $this->XenditServices->paymentchargenew($request->input());
-            // }else{
-                // return ApiResponse::error();
-                // $result = $this->services->paymentcharge($request->input());
-            // }            
-
+            $result = $this->productPaymentService->getProductSnapToken($request->input());
             \DB::commit();
             return ApiResponse::success([
                 "message" => __("message.transaction_success"),
@@ -159,5 +152,16 @@ class SupportController extends Controller
     {
         return TransactionService::getInstance()->platformamountperdays($request->input('filter'));
     }
-}
 
+    public function totalsoldproductsperdays(Request $request)
+    {
+        $user_id = $request->user()->id;
+        return TransactionService::getInstance()->totalsoldproductsperdays($user_id, $request->input('filter'));
+    }
+
+    public function totalsoldproductsamountperdays(Request $request)
+    {
+        $user_id = $request->user()->id;
+        return TransactionService::getInstance()->totalsoldproductsamountperdays($user_id, $request->input('filter'));
+    }
+}

@@ -275,6 +275,102 @@ class TransactionService
         return $modelPayout;
     }
 
+    public function totalpayoutamount($data = [])
+    {
+        $query = $this->modelPayout;
+        
+        if (isset($data['user_id'])) {
+            $query = $query->where('user_id', $data['user_id']);
+        }
+        
+        if (isset($data['start_date']) && isset($data['end_date'])) {
+            $query = $query->whereBetween('created_at', [$data['start_date'], $data['end_date']]);
+        }
+        
+        return $query->sum('amount');
+    }
+
+    public function totalsoldproducts($data = [])
+    {
+        $query = \App\Models\ProductPurchase::where('status', 'success');
+        
+        if (isset($data['user_id'])) {
+            $query = $query->whereHas('product', function($q) use ($data) {
+                $q->where('user_id', $data['user_id']);
+            });
+        }
+        
+        if (isset($data['start_date']) && isset($data['end_date'])) {
+            $query = $query->whereBetween('created_at', [$data['start_date'], $data['end_date']]);
+        }
+        
+        return $query->sum('quantity');
+    }
+
+    public function totalsoldproducts_today($data = [])
+    {
+        $query = \App\Models\ProductPurchase::where('status', 'success')
+                                            ->whereDate('created_at', now()->format('Y-m-d'));
+        
+        if (isset($data['user_id'])) {
+            $query = $query->whereHas('product', function($q) use ($data) {
+                $q->where('user_id', $data['user_id']);
+            });
+        }
+        
+        return $query->sum('quantity');
+    }
+
+    public function totalsoldproductsperdays($user_id = null, $filter = null)
+    {
+        $data = [];
+
+        if ($filter == null) {
+            $filter = 30;
+        }
+        
+        for ($i = $filter; $i >= 0; --$i) {
+            $date = now()->subDays($i);
+            $query = \App\Models\ProductPurchase::where('status', 'success')
+                                                ->whereDate('created_at', $date->format('Y-m-d'));
+            
+            if ($user_id) {
+                $query = $query->whereHas('product', function($q) use ($user_id) {
+                    $q->where('user_id', $user_id);
+                });
+            }
+            
+            $modelProducts = $query->sum('quantity');
+            $data[] = [$date->format('d M Y') => $modelProducts];
+        }
+        return $data;
+    }
+
+    public function totalsoldproductsamountperdays($user_id = null, $filter = null)
+    {
+        $data = [];
+
+        if ($filter == null) {
+            $filter = 30;
+        }
+        
+        for ($i = $filter; $i >= 0; --$i) {
+            $date = now()->subDays($i);
+            $query = \App\Models\ProductPurchase::where('status', 'success')
+                                                ->whereDate('created_at', $date->format('Y-m-d'));
+            
+            if ($user_id) {
+                $query = $query->whereHas('product', function($q) use ($user_id) {
+                    $q->where('user_id', $user_id);
+                });
+            }
+            
+            $modelProducts = $query->sum('total_price');
+            $data[] = [$date->format('d M Y') => $modelProducts];
+        }
+        return $data;
+    }
+
     public function payoutamount($params)
     {
         $total = 0;

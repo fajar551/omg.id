@@ -18,63 +18,79 @@ class PaymentMethodSeeder extends Seeder
         try {
             DB::beginTransaction();
             
+            // Delete existing payment methods first
+            PaymentMethod::query()->delete();
+            
             $providers = [
+                // Midtrans Payment Methods (Unified)
                 [
-                    "name" => "Sahabat Sampoerna",
+                    "name" => "Credit Card",
+                    "payment_type" => "credit_card",
+                    "bank_name" => null,
+                    "image" => "pg_credit_card.svg",
+                    "type" => 3,
+                    "order" => 1
+                ],
+                [
+                    "name" => "Bank Transfer",
                     "payment_type" => "bank_transfer",
-                    "bank_name" => "sahabat_sampoerna",
-                    "image" => "pg_sampoerna.png",
-                    "type" => 2
-                ],
-                [
-                    "name" => "Dana",
-                    "payment_type" => "dana",
                     "bank_name" => null,
-                    "image" => "pg_dana.png",
-                    "type" => 1
-                ],
-                [
-                    "name" => "Ovo",
-                    "payment_type" => "ovo",
-                    "bank_name" => null,
-                    "image" => "pg_ovo.png",
-                    "type" => 1
+                    "image" => "pg_bank_transfer.svg",
+                    "type" => 3,
+                    "order" => 2
                 ],
                 [
                     "name" => "Gopay",
                     "payment_type" => "gopay",
                     "bank_name" => null,
-                    "image" => "pg_gopay.png",
-                    "type" => 1
+                    "image" => "pg_gopay.svg",
+                    "type" => 3,
+                    "order" => 3
                 ],
                 [
-                    "name" => "Link aja",
+                    "name" => "OVO",
+                    "payment_type" => "ovo",
+                    "bank_name" => null,
+                    "image" => "pg_ovo.svg",
+                    "type" => 3,
+                    "order" => 4
+                ],
+                [
+                    "name" => "Dana",
+                    "payment_type" => "dana",
+                    "bank_name" => null,
+                    "image" => "pg_dana.svg",
+                    "type" => 3,
+                    "order" => 5
+                ],
+                [
+                    "name" => "LinkAja",
                     "payment_type" => "linkaja",
                     "bank_name" => null,
-                    "image" => "pg_linkaja.png",
-                    "type" => 1
+                    "image" => "pg_linkaja.svg",
+                    "type" => 3,
+                    "order" => 6
                 ],
                 [
-                    "name" => "Shopee Pay",
+                    "name" => "ShopeePay",
                     "payment_type" => "shopeepay",
                     "bank_name" => null,
-                    "image" => "pg_shopeepay.png",
-                    "type" => 1
+                    "image" => "pg_shopeepay.svg",
+                    "type" => 3,
+                    "order" => 7
                 ],
                 [
-                    "name" => "Qris",
+                    "name" => "QRIS",
                     "payment_type" => "qris",
                     "bank_name" => null,
-                    "image" => "pg_qris.png",
-                    "type" => 1
+                    "image" => "pg_qris.svg",
+                    "type" => 3,
+                    "order" => 8
                 ],
             ];
 
-            foreach ($providers as $key => $provider) {
-                PaymentMethod::updateOrCreate(
-                    ['id' => $key],
-                    $provider,
-                );
+            foreach ($providers as $provider) {
+                PaymentMethod::create($provider);
             }
 
             DB::commit();

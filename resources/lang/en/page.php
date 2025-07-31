@@ -121,7 +121,7 @@ return [
     'success_with_errors' => 'Success with errors.',
     'findoutmore' => 'Find out more',
     'please_select_for_mass_action' => 'Please select items for any mass action.',
-    'cant_process_request' => 'Could not process request','The Activity Log may provide more details.',
+    'cant_process_request' => 'Could not process request. The Activity Log may provide more details.',
     'before' => 'before',
     'after' => 'after',
     'recommended' => 'Recommended',
@@ -212,11 +212,14 @@ return [
     'a_time_support'=> 'Time Supported',
     'more_time_support'=> 'Times Supported',
     'disbursed_total'=> 'Disbursed Total',
+    'total_products_sold'=> 'Total Products Sold',
+    'products_sold_today'=> 'Products Sold Today',
     'last_30_day' => 'Last 30 days',
     'last_15_day' => 'Last 15 days',
     'last_7_day' => 'Last 7 days',
     'graffic_support' => 'Number of supports in the last :filter days',
     'graffic_supporter' => 'Number of supporter in the last :filter days',
+    'graffic_products_sold' => 'Number of products sold in the last :filter days',
     'idr_format' => 'IDR Format',
     
     // lang related to Item
