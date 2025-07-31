@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Midtrans Snap</title>
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-yXcEzjhVAqWaf3qm"></script>
+</head>
+<body>
+    <h1>Test Midtrans Snap</h1>
+    <button onclick="testSnap()">Test Snap Payment</button>
+    
+    <script>
+        function testSnap() {
+            console.log('Snap available:', typeof snap !== 'undefined');
+            if (typeof snap !== 'undefined') {
+                console.log('Snap object:', snap);
+                
+                // Test snap.pay with a dummy token
+                try {
+                    snap.pay('test-token', {
+                        onSuccess: function(result) {
+                            console.log('Success:', result);
+                            alert('Payment Success!');
+                        },
+                        onPending: function(result) {
+                            console.log('Pending:', result);
+                            alert('Payment Pending!');
+                        },
+                        onError: function(result) {
+                            console.log('Error:', result);
+                            alert('Payment Error!');
+                        },
+                        onClose: function() {
+                            console.log('Closed');
+                            alert('Payment Closed!');
+                        }
+                    });
+                } catch (error) {
+                    console.error('Snap.pay error:', error);
+                    alert('Error calling snap.pay: ' + error.message);
+                }
+            } else {
+                alert('Snap is not available!');
+            }
+        }
+        
+        // Check on page load
+        window.onload = function() {
+            console.log('Page loaded, Snap available:', typeof snap !== 'undefined');
+        };
+    </script>
+</body>
+</html> 

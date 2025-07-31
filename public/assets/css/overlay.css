@@ -1,0 +1,45 @@
+.col-notifikasi iframe{
+    height: 200px;
+}
+.lastsupporter-col iframe{
+    height: 145px;
+}
+.col-leaderboard iframe{
+    height: 200px !important;
+}
+@media(max-width:1024px){
+    .col-notifikasi .header-title h6, .col-leaderboard .header-title h6{
+        font-size: 16px;
+    }
+    .col-notifikasi .card-header-toolbar label, .col-leaderboard .card-header-toolbar label{
+        font-size: 10px;
+    }
+    .card-testing label {
+        font-size: 13px;
+    }
+}
+@media(max-width:768px){
+    .overlaysticky.fixed {
+        position: fixed;
+        top: 12px;
+        right: 10px;
+        left: 10px;
+        z-index: 999;
+    }
+    .overlaysticky.fixed h6{
+        font-size: 14px;
+    }
+    .overlaysticky.fixed .card-header label{
+        font-size: 12px;;
+    }
+    .col-notifikasi .overlaysticky.fixed iframe{
+        height: 140px !important;
+    }
+
+}  
+
+.stickies {
+    position: -webkit-sticky; /* Required for Safari */
+    position: sticky;
+    top: 15px;
+}

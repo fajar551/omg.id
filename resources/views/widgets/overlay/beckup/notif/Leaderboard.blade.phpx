@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+   <title>Andi-wijang Trakteer Tip Notification Stream</title>
+   @include('includes.head')
+   <link rel="stylesheet" href="{{asset('assets/leaderboard.css')}}">
+
+</head>
+
+<body style="background-color:#f8f9fa">
+
+<div class="p-4 leaderboard">
+   <div class="card mb-2">
+      <div class="card-body">
+         <ul class="notification-list m-0 p-0">
+            <li class="d-flex align-items-center justify-content-between">
+               <div class="user-img img-fluid"><img src="{{ asset('images/user/02.jpg') }}" alt="story-img" class="rounded-circle avatar-40">
+               </div>
+               <div class="w-100">
+                  <div class="d-flex justify-content-between">
+                     <div class=" ms-3">
+                        <h6>Leaderboard</h6>
+                        <p class="mb-0">Top Supporter 7 Hari Terakhir</p>
+                     </div>
+                     <div class="d-flex align-items-center">
+                        <span>Rp.5000</span>
+                     </div>
+                  </div>
+               </div>
+            </li>
+         </ul>
+      </div>
+   </div>
+   <div class="card mb-2">
+      <div class="card-body">
+         <ul class="notification-list m-0 p-0">
+            <li class="d-flex align-items-center justify-content-between">
+               <div class="user-img img-fluid"><img src="{{ asset('images/user/02.jpg') }}" alt="story-img" class="rounded-circle avatar-40">
+               </div>
+               <div class="w-100">
+                  <div class="d-flex justify-content-between">
+                     <div class=" ms-3">
+                        <h6>Leaderboard</h6>
+                        <p class="mb-0">Top Supporter 7 Hari Terakhir</p>
+                     </div>
+                     <div class="d-flex align-items-center">
+                        <span>Rp.5000</span>
+                     </div>
+                  </div>
+               </div>
+            </li>
+         </ul>
+      </div>
+   </div>
+   <div class="card mb-2">
+      <div class="card-body">
+         <ul class="notification-list m-0 p-0">
+            <li class="d-flex align-items-center justify-content-between">
+               <div class="user-img img-fluid"><img src="{{ asset('images/user/02.jpg') }}" alt="story-img" class="rounded-circle avatar-40">
+               </div>
+               <div class="w-100">
+                  <div class="d-flex justify-content-between">
+                     <div class=" ms-3">
+                        <h6>Leaderboard</h6>
+                        <p class="mb-0">Top Supporter 7 Hari Terakhir</p>
+                     </div>
+                     <div class="d-flex align-items-center">
+                        <span>Rp.5000</span>
+                     </div>
+                  </div>
+               </div>
+            </li>
+         </ul>
+      </div>
+   </div>
+   <div class="card mb-2">
+      <div class="card-body">
+         <ul class="notification-list m-0 p-0">
+            <li class="d-flex align-items-center justify-content-between">
+               <div class="user-img img-fluid"><img src="{{ asset('images/user/02.jpg') }}" alt="story-img" class="rounded-circle avatar-40">
+               </div>
+               <div class="w-100">
+                  <div class="d-flex justify-content-between">
+                     <div class=" ms-3">
+                        <h6>Leaderboard</h6>
+                        <p class="mb-0">Top Supporter 7 Hari Terakhir</p>
+                     </div>
+                     <div class="d-flex align-items-center">
+                        <span>Rp.5000</span>
+                     </div>
+                  </div>
+               </div>
+            </li>
+         </ul>
+      </div>
+   </div>
+
+</div>
+
+   @include('includes.scripts-global')
+</body>
+</html>
