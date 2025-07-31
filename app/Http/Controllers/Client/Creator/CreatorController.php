@@ -179,4 +179,47 @@ class CreatorController extends Controller {
         }
     }
 
+    public function productDetail(Request $request) {
+        !in_array($request->page_name, $this->filterRoute) ?: abort(404);
+
+        try {
+            // Get page data
+            $data = $this->services->getPageData([
+                "page_name" => $request->page_name,
+                "supporter_id" => auth()->check() ? $request->user()->id : null
+            ]);
+
+            // Get product detail
+            $product = Product::where('id', $request->product_id)
+                             ->where('user_id', $data['page']['user_id'])
+                             ->first();
+
+            if (!$product) {
+                abort(404, 'Produk tidak ditemukan');
+            }
+
+            // Get payment methods for modal
+            $paymentMethods = PaymentMethod::where('disabled', null)
+                                          ->orderBy('order', 'ASC')
+                                          ->get();
+
+            session(['url.intended' => url()->current()]);
+
+            return view('products.product-detail-public', [
+                'product' => $product,
+                'pageName' => $request->page_name,
+                'paymentMethods' => $paymentMethods,
+                'page' => $data['page'],
+                'user' => $data['user'] ?? null
+            ]);
+
+        } catch (\Exception $ex) {
+            if ($ex instanceof NotFoundException) {
+                return abort(404, $ex->getMessage()); 
+            }
+
+            return abort(500, $ex->getMessage()); 
+        }
+    }
+
 }

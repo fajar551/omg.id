@@ -107,17 +107,27 @@ class ProductPaymentController extends Controller
         $status = $data['transaction_status'];
         $fraudStatus = $data['fraud_status'];
 
-                $purchase = ProductPurchase::where('order_id', $orderId)->first();
+        $purchase = ProductPurchase::where('order_id', $orderId)->first();
 
-                if ($purchase) {
+        if ($purchase) {
             if ($status == 'capture') {
                 if ($fraudStatus == 'challenge') {
                     $purchase->status = 'challenge';
                 } else if ($fraudStatus == 'accept') {
                     $purchase->status = 'success';
+                    
+                    // Send email with product file for digital products
+                    if (in_array($purchase->product->type, ['ebook', 'ecourse', 'digital'])) {
+                        \App\Jobs\SendProductPurchaseEmail::dispatch($purchase);
+                    }
                 }
             } else if ($status == 'settlement') {
                 $purchase->status = 'success';
+                
+                // Send email with product file for digital products
+                if (in_array($purchase->product->type, ['ebook', 'ecourse', 'digital'])) {
+                    \App\Jobs\SendProductPurchaseEmail::dispatch($purchase);
+                }
             } else if ($status == 'cancel' || $status == 'deny' || $status == 'expire') {
                 $purchase->status = 'failed';
             } else if ($status == 'pending') {

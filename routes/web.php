@@ -89,6 +89,9 @@ Route::group(['prefix' => '{page_name}'], function () {
     Route::get('content/saved', [CreatorController::class, 'savedContent'])->name('creator.savedcontent')->middleware('feature:creator_page,on,404');
     Route::get('content/{slug}/detail', [CreatorController::class, 'contentDetail'])->name('creator.contentdetail')->middleware(['feature:creator_page,on,404']);
     
+    // Product detail route for public
+    Route::get('product/{product_id}/detail', [CreatorController::class, 'productDetail'])->name('product.detail.public')->middleware('feature:creator_page,on,404');
+    
     Route::group(['prefix' => 'support'], function () {
         Route::get('/', [SupportController::class, 'index'])->name('support.index');
         Route::get('{orderID}/status', [SupportController::class, 'paymentStatus'])->name('support.payment_status');
@@ -338,46 +341,53 @@ Route::group(['prefix' => 'product/manage', 'middleware' => ['auth', 'is_creator
 //     return view('products.purchase', compact('product', 'pageName', 'paymentMethods'));
 // })->name('test.payment');
 
-// HAPUS: Product download route
-// Route::get('product/download/{purchase_id}', function($purchaseId) {
-//     $purchase = \App\Models\ProductPurchase::with(['product.ebook', 'product.ecourse', 'product.digital'])->find($purchaseId);
-//     
-//     if (!$purchase) {
-//         abort(404, 'Purchase not found');
-//     }
-//     
-//     // Check if purchase is paid
-//     if ($purchase->payment_status !== 'success') {
-//         abort(403, 'Payment not completed');
-//     }
-//     
-//     // Get file path based on product type
-//     $filePath = null;
-//     switch ($purchase->product->type) {
-//         case 'ebook':
-//             $filePath = $purchase->product->ebook->file_path ?? null;
-//             break;
-//         case 'ecourse':
-//             $filePath = $purchase->product->ecourse->file_path ?? null;
-//             break;
-//         case 'digital':
-//             $filePath = $purchase->product->digital->file_path ?? null;
-//             break;
-//     }
-//     
-//     if (!$filePath || !file_exists($filePath)) {
-//         abort(404, 'Product file not found');
-//     }
-//     
-//     // Return file download
-//     return response()->download($filePath, $purchase->product->name . '.' . pathinfo($filePath, PATHINFO_EXTENSION));
-// })->name('product.download');
+// Product download route
+Route::get('product/download/{purchase_id}', function($purchaseId) {
+    $purchase = \App\Models\ProductPurchase::with(['product.ebook', 'product.ecourse', 'product.digital'])->find($purchaseId);
+    
+    if (!$purchase) {
+        abort(404, 'Purchase not found');
+    }
+    
+    // Check if purchase is paid
+    if ($purchase->status !== 'success') {
+        abort(403, 'Payment not completed');
+    }
+    
+    // Get file path based on product type
+    $filePath = null;
+    switch ($purchase->product->type) {
+        case 'ebook':
+            $filePath = $purchase->product->ebook->file_path ?? null;
+            break;
+        case 'ecourse':
+            $filePath = $purchase->product->ecourse->file_path ?? null;
+            break;
+        case 'digital':
+            $filePath = $purchase->product->digital->file_path ?? null;
+            break;
+    }
+    
+    if (!$filePath || !file_exists($filePath)) {
+        abort(404, 'Product file not found');
+    }
+    
+    // Return file download
+    return response()->download($filePath, $purchase->product->name . '.' . pathinfo($filePath, PATHINFO_EXTENSION));
+})->name('product.download');
 
-// HAPUS: Webhook routes for payment status
-// Route::post('webhook/product-purchase/xendit', [App\Http\Controllers\Client\Product\ProductPurchaseWebhookController::class, 'xenditWebhook']);
-// Route::post('webhook/product-purchase/midtrans', [App\Http\Controllers\Client\Product\ProductPurchaseWebhookController::class, 'midtransWebhook']);
+// Webhook routes for payment status
+Route::post('webhook/product-purchase/xendit', [App\Http\Controllers\Client\Product\ProductPurchaseWebhookController::class, 'xenditWebhook']);
+Route::post('webhook/product-purchase/midtrans', [App\Http\Controllers\Client\Product\ProductPurchaseWebhookController::class, 'midtransWebhook']);
 
 // Product Payment Routes
 Route::post('/product/payment/process', [App\Http\Controllers\Client\Product\ProductPaymentController::class, 'processPayment'])->name('product.payment.process');
 Route::get('/product/payment/{purchase_id}/status', [App\Http\Controllers\Client\Product\ProductPaymentController::class, 'paymentStatus'])->name('product.payment.status');
 Route::post('/product/payment/webhook', [App\Http\Controllers\Client\Product\ProductPaymentController::class, 'webhook'])->name('product.payment.webhook');
+
+// Email Monitoring Routes (Admin Only)
+Route::middleware(['auth', 'is_admin'])->group(function () {
+    Route::get('/admin/email-monitoring', [App\Http\Controllers\Admin\EmailMonitoringController::class, 'index'])->name('admin.email-monitoring');
+    Route::post('/admin/test-product-email/{purchase_id}', [App\Http\Controllers\Admin\EmailMonitoringController::class, 'testEmail'])->name('admin.test-product-email');
+    Route::get('/admin/email-logs', [App\Http\Controllers\Admin\EmailMonitoringController::class, 'logs'])->name('admin.email-logs');
+});

@@ -66,8 +66,21 @@
                         @enderror
                       </div>
                       <div class="form-group mb-3">
+                        <label for="type" class="form-label">Jenis Produk <span class="text-danger">*</span></label>
+                        <select name="type" id="type" class="form-control @error('type') is-invalid @enderror" required>
+                          <option value="">Pilih Jenis Produk</option>
+                          <option value="ebook">Ebook</option>
+                          <option value="ecourse">Ecourse</option>
+                          <option value="buku">Buku Fisik</option>
+                          <option value="digital">Digital Product</option>
+                        </select>
+                        @error('type')
+                          <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                      </div>
+                      <div class="form-group mb-3" id="form-stock">
                         <label for="stock" class="form-label">Stok <span class="text-danger">*</span></label>
-                        <input type="number" name="stock" id="stock" class="form-control @error('stock') is-invalid @enderror" value="{{ old('stock') }}" min="0" required>
+                        <input type="number" name="stock" id="stock" class="form-control @error('stock') is-invalid @enderror" value="{{ old('stock') }}" min="0">
                         @error('stock')
                           <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -112,4 +125,54 @@
       </div>
     </div>
 </div>
+
+<script>
+// Wait for jQuery to be available
+function initializeProductFormScripts() {
+    if (typeof $ === 'undefined') {
+        console.error('jQuery is not available, retrying in 100ms...');
+        setTimeout(initializeProductFormScripts, 100);
+        return;
+    }
+    
+    console.log('jQuery is available, initializing product form scripts...');
+    
+    $(document).ready(function() {
+        const typeSelect = document.getElementById('type');
+        const stockField = document.getElementById('form-stock');
+        
+        function toggleStockField() {
+            const selectedType = typeSelect.value;
+            if (stockField) {
+                // Sembunyikan stok jika digital, ebook, atau ecourse
+                stockField.style.display = (selectedType === 'digital' || selectedType === 'ebook' || selectedType === 'ecourse') ? 'none' : 'block';
+                
+                // Set required attribute based on type
+                const stockInput = document.getElementById('stock');
+                if (stockInput) {
+                    stockInput.required = (selectedType === 'buku');
+                }
+            }
+        }
+        
+        if (typeSelect) {
+            typeSelect.addEventListener('change', toggleStockField);
+            // Initial call
+            toggleStockField();
+        }
+    });
+}
+
+// Initialize scripts when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    initializeProductFormScripts();
+});
+
+// Also try to initialize if DOM is already loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeProductFormScripts);
+} else {
+    initializeProductFormScripts();
+}
+</script>
 @endsection 

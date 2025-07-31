@@ -14,7 +14,7 @@ $badgeColor = [
 ][$type] ?? 'bg-secondary text-dark';
 $isFree = (isset($product->price) && $product->price == 0);
 @endphp
-<div class="card card-content shadow-sm shadow-hover-sm border rounded-small inner-card-dark product-card-public" style="transition: all 0.3s ease; min-height: 280px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+<div class="card card-content shadow-sm shadow-hover-sm border rounded-small inner-card-dark product-card-public" style="transition: all 0.3s ease; min-height: 280px; cursor: pointer;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'" onclick="window.location.href='{{ route('product.detail.public', ['product_id' => $product->id, 'page_name' => $pageName ?? 'creator']) }}'">
     <div class="img-list-content position-relative">
         <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('assets/img/image.png') }}" class="img-fluid card-header-bg product-image" alt="Product image" style="border-radius: 12px 12px 0 0; height: 160px; object-fit: cover; width: 100%;">
         <span class="position-absolute" style="top:8px; right:8px; z-index:2;">
@@ -49,12 +49,12 @@ $isFree = (isset($product->price) && $product->price == 0);
         <!-- Payment Buttons -->
         <div class="mt-2">
             @if($isFree)
-                <button class="btn btn-success btn-sm w-100 rounded-pill" onclick="downloadFreeProduct({{ $product->id }})">
+                <button class="btn btn-success btn-sm w-100 rounded-pill" onclick="event.stopPropagation(); downloadFreeProduct({{ $product->id }})">
                     <i class="ri-download-line me-1"></i>Download Gratis
                 </button>
             @else
-                <button class="btn btn-primary btn-sm w-100 rounded-pill" onclick="openProductPaymentModal({{ $product->id }}, '{{ $product->name }}', {{ $product->price }}, '{{ $pageName ?? 'creator' }}', '{{ $product->image ? asset('storage/' . $product->image) : asset('assets/img/image.png') }}', '{{ $type }}')">
-                    <i class="ri-shopping-cart-line me-1"></i>Beli Sekarang
+                <button class="btn btn-primary btn-sm w-100 rounded-pill" onclick="event.stopPropagation(); window.location.href='{{ route('product.detail.public', ['product_id' => $product->id, 'page_name' => $pageName ?? 'creator']) }}'">
+                    <i class="ri-eye-line me-1"></i>Lihat Detail
                 </button>
             @endif
         </div>
@@ -62,58 +62,6 @@ $isFree = (isset($product->price) && $product->price == 0);
 </div>
 
 <script>
-function openProductPaymentModal(productId, productName, productPrice, pageName, productImage, productType) {
-    console.log('Opening modal with:', {productId, productName, productPrice, pageName, productType});
-    
-    // Set data untuk modal
-    document.getElementById('product-id').value = productId;
-    document.getElementById('product-name').textContent = productName;
-    document.getElementById('product-price').textContent = 'Rp' + productPrice.toLocaleString('id-ID');
-    document.getElementById('product-page-name').value = pageName;
-    document.getElementById('product-price-hidden').value = productPrice;
-    document.getElementById('product-type').value = productType;
-    
-    // Set gambar produk
-    var productImageElement = document.querySelector('#product-box img');
-    if (productImageElement) {
-        productImageElement.src = productImage;
-    }
-    
-    // Reset form dan kosongkan nama dan email
-    document.getElementById('product-payment-form').reset();
-    document.getElementById('buyer-name').value = '';
-    document.getElementById('buyer-email').value = '';
-    document.getElementById('buyer-address').value = '';
-    document.getElementById('product-total').textContent = 'Rp' + productPrice.toLocaleString('id-ID');
-    document.getElementById('inputProductQty').value = '1';
-    document.getElementById('product-quantity').value = '1';
-    
-    // Toggle address field based on product type
-    toggleAddressField(productType);
-    
-    // Show modal
-    var modal = new bootstrap.Modal(document.getElementById('productPaymentModal'));
-    modal.show();
-    
-    // Debug: Log field values after setting
-    console.log('Field values after setting:');
-    console.log('product-id:', document.getElementById('product-id').value);
-    console.log('product-type:', document.getElementById('product-type').value);
-    console.log('product-page-name:', document.getElementById('product-page-name').value);
-}
-
-// Function to show/hide address field based on product type
-function toggleAddressField(productType) {
-    if (productType === 'buku') {
-        $('#address-field').show();
-        $('#buyer-address').prop('required', true);
-    } else {
-        $('#address-field').hide();
-        $('#buyer-address').prop('required', false);
-    }
-}
-
-// Function to download free product
 function downloadFreeProduct(productId) {
     console.log('Downloading free product:', productId);
     // Implement free product download logic here

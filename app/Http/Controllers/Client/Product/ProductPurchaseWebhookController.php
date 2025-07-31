@@ -32,13 +32,32 @@ class ProductPurchaseWebhookController extends Controller
                 'status' => 'success'
             ]);
             
+            \Log::info('💰 Xendit payment successful, processing email', [
+                'purchase_id' => $purchase->id,
+                'product_type' => $purchase->product->type,
+                'buyer_email' => $purchase->email
+            ]);
+            
             // Send email with product file
             if (in_array($purchase->product->type, ['ebook', 'ecourse', 'digital'])) {
+                \Log::info('📧 Dispatching email job for digital product', [
+                    'purchase_id' => $purchase->id,
+                    'product_type' => $purchase->product->type
+                ]);
                 SendProductPurchaseEmail::dispatch($purchase);
+            } else {
+                \Log::info('📦 Physical product, no email needed', [
+                    'purchase_id' => $purchase->id,
+                    'product_type' => $purchase->product->type
+                ]);
             }
         } elseif ($payload['status'] === 'EXPIRED') {
             $purchase->update([
                 'status' => 'failed'
+            ]);
+            
+            \Log::info('❌ Xendit payment expired', [
+                'purchase_id' => $purchase->id
             ]);
         }
         
@@ -68,13 +87,33 @@ class ProductPurchaseWebhookController extends Controller
                 'status' => 'success'
             ]);
             
+            \Log::info('💰 Midtrans payment successful, processing email', [
+                'purchase_id' => $purchase->id,
+                'product_type' => $purchase->product->type,
+                'buyer_email' => $purchase->email,
+                'transaction_status' => $payload['transaction_status']
+            ]);
+            
             // Send email with product file
             if (in_array($purchase->product->type, ['ebook', 'ecourse', 'digital'])) {
+                \Log::info('📧 Dispatching email job for digital product', [
+                    'purchase_id' => $purchase->id,
+                    'product_type' => $purchase->product->type
+                ]);
                 SendProductPurchaseEmail::dispatch($purchase);
+            } else {
+                \Log::info('📦 Physical product, no email needed', [
+                    'purchase_id' => $purchase->id,
+                    'product_type' => $purchase->product->type
+                ]);
             }
         } elseif ($payload['transaction_status'] === 'expire') {
             $purchase->update([
                 'status' => 'failed'
+            ]);
+            
+            \Log::info('❌ Midtrans payment expired', [
+                'purchase_id' => $purchase->id
             ]);
         }
         

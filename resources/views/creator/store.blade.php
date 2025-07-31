@@ -24,7 +24,9 @@
                     <h5 class="card-title">{{ $product->name }}</h5>
                     <p class="card-text small flex-grow-1">{{ $product->description }}</p>
                     <div class="fw-bold mb-2">Rp {{ number_format($product->price, 0, ',', '.') }}</div>
-                    <div class="text-muted mb-2">Stok: {{ $product->stock }}</div>
+                    @if($product->type === 'buku' && $product->stock !== null)
+                        <div class="text-muted mb-2">Stok: {{ $product->stock }}</div>
+                    @endif
                 </div>
             </div>
         </div>

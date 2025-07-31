@@ -64,7 +64,7 @@ return [
 
         'log' => [
             'transport' => 'log',
-            'channel' => env('MAIL_LOG_CHANNEL'),
+            'channel' => env('MAIL_LOG_CHANNEL', 'daily'),
         ],
 
         'array' => [
@@ -108,11 +108,29 @@ return [
     */
 
     'markdown' => [
-        'theme' => 'default',
+        'theme' => env(
+            'MAIL_MARKDOWN_THEME',
+            resource_path('views/vendor/mail/html/themes/default.css')
+        ),
 
         'paths' => [
             resource_path('views/vendor/mail'),
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Email Debug Settings
+    |--------------------------------------------------------------------------
+    |
+    | Settings for debugging email sending in development
+    |
+    */
+
+    'debug' => [
+        'enabled' => env('MAIL_DEBUG', false),
+        'log_attachments' => env('MAIL_LOG_ATTACHMENTS', true),
+        'log_recipients' => env('MAIL_LOG_RECIPIENTS', true),
     ],
 
 ];
